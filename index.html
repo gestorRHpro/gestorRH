@@ -488,7 +488,7 @@
 <script>
 // ── Supabase ──────────────────────────────────────────────────────────────
 const SUPABASE_URL = 'https://qbtroafavgbvrznggppr.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_dRdDtbCgntJ0T5cAEmxbfg_H_4maUDd';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFidHJvYWZhdmdidnJ6bmdncHByIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE0NDUwMTcsImV4cCI6MjA5NzAyMTAxN30.POJQXzgEzlItAyyZY0UskSuPjPdVBQUPck4iHw6h6SA';
 
 async function sbUpload(bucket, path, file, contentType) {
   const res = await fetch(`${SUPABASE_URL}/storage/v1/object/${bucket}/${path}`, {
