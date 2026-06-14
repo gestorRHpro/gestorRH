@@ -447,11 +447,14 @@ elif etapa == 2:
               <p style="color:#15803d;font-weight:600">✅ Gravação concluída! Revise abaixo:</p>
               <video src="${url}" controls style="width:100%;border-radius:10px;max-height:280px"></video>
               <br>
-              <a id="dl" href="${url}" download="apresentacao.webm"
-                style="display:inline-block;margin-top:8px;background:#2563eb;color:white;
-                       padding:6px 16px;border-radius:8px;text-decoration:none;font-size:13px">
-                ⬇ Baixar para enviar (Etapa 2)
+              <a href="${url}" download="meu-video.webm"
+                style="display:inline-block;margin-top:12px;background:#16a34a;color:white;
+                       padding:10px 24px;border-radius:8px;text-decoration:none;font-size:15px;font-weight:600">
+                ⬇ Baixar vídeo gravado
               </a>
+              <p style="color:#64748b;font-size:13px;margin-top:8px">
+                📌 Após baixar, vá para a aba <strong>"Enviar arquivo de vídeo"</strong> e envie o arquivo baixado.
+              </p>
             `;
             clearInterval(timerInt);
             timerEl.textContent = '';
