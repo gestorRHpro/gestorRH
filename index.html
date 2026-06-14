@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Candidatura – RH</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: #f0f4f8;
+    color: #1e293b;
+    min-height: 100vh;
+  }
+
+  header {
+    background: #1e3a5f;
+    color: white;
+    text-align: center;
+    padding: 2rem 1rem 1.5rem;
+  }
+  header h1 { font-size: 1.8rem; font-weight: 700; }
+  header p  { color: #94a3b8; margin-top: .4rem; font-size: .95rem; }
+
+  .progress-bar {
+    background: #e2e8f0;
+    height: 6px;
+  }
+  .progress-fill {
+    height: 6px;
+    background: #2563eb;
+    transition: width .4s ease;
+  }
+
+  .container {
+    max-width: 640px;
+    margin: 2rem auto;
+    padding: 0 1rem 4rem;
+  }
+
+  .card {
+    background: white;
+    border-radius: 16px;
+    padding: 2rem;
+    box-shadow: 0 4px 24px rgba(0,0,0,.08);
+    margin-bottom: 1.5rem;
+  }
+
+  .step-label {
+    display: inline-block;
+    background: #2563eb;
+    color: white;
+    border-radius: 999px;
+    padding: 3px 14px;
+    font-size: .78rem;
+    font-weight: 600;
+    margin-bottom: .8rem;
+  }
+
+  h2 { font-size: 1.3rem; font-weight: 700; color: #1e3a5f; margin-bottom: 1.2rem; }
+
+  label {
+    display: block;
+    font-size: .85rem;
+    font-weight: 600;
+    color: #475569;
+    margin-bottom: .4rem;
+    margin-top: 1rem;
+  }
+  label:first-of-type { margin-top: 0; }
+
+  input, select, textarea {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 10px;
+    font-size: 15px;
+    font-family: inherit;
+    outline: none;
+    transition: border .2s;
+    background: white;
+    color: #1e293b;
+  }
+  input:focus, select:focus { border-color: #2563eb; box-shadow: 0 0 0 3px #dbeafe; }
+
+  .row { display: flex; gap: 10px; }
+  .row > * { flex: 1; }
+
+  .info-box {
+    background: #eff6ff;
+    border-left: 4px solid #2563eb;
+    border-radius: 8px;
+    padding: .8rem 1rem;
+    font-size: .88rem;
+    color: #1e3a5f;
+    margin: 1rem 0;
+    line-height: 1.6;
+  }
+
+  .btn {
+    display: inline-block;
+    padding: 12px 28px;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: background .2s, transform .1s;
+  }
+  .btn:active { transform: scale(.98); }
+  .btn-primary { background: #2563eb; color: white; width: 100%; margin-top: 1.2rem; }
+  .btn-primary:hover { background: #1d4ed8; }
+  .btn-secondary { background: #e2e8f0; color: #475569; }
+  .btn-secondary:hover { background: #cbd5e1; }
+  .btn-green { background: #16a34a; color: white; }
+  .btn-green:hover { background: #15803d; }
+  .btn-row { display: flex; gap: 10px; margin-top: 1.2rem; }
+  .btn-row .btn-secondary { flex: 1; }
+  .btn-row .btn-primary { flex: 2; margin-top: 0; }
+
+  /* Vídeo */
+  #videoPreview {
+    width: 100%;
+    border-radius: 12px;
+    background: #0f172a;
+    max-height: 300px;
+    display: block;
+    margin-bottom: 1rem;
+  }
+  .video-btns { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: .8rem; }
+  .video-btns .btn { padding: 8px 18px; font-size: 14px; }
+  #timer { font-weight: 700; font-size: 1.1rem; color: #dc2626; min-height: 1.5rem; margin-bottom: .5rem; }
+
+  #resultArea { margin-top: 1rem; }
+  #resultArea video { width: 100%; border-radius: 10px; max-height: 260px; }
+
+  /* Upload currículo */
+  .upload-area {
+    border: 2px dashed #cbd5e1;
+    border-radius: 12px;
+    padding: 2rem;
+    text-align: center;
+    cursor: pointer;
+    transition: border .2s, background .2s;
+    margin-top: .5rem;
+  }
+  .upload-area:hover { border-color: #2563eb; background: #eff6ff; }
+  .upload-area input { display: none; }
+  .upload-area .icon { font-size: 2rem; margin-bottom: .5rem; }
+  .upload-area p { color: #64748b; font-size: .9rem; }
+  .upload-area p strong { color: #2563eb; }
+
+  /* Revisão */
+  .review-item { padding: .6rem 0; border-bottom: 1px solid #f1f5f9; font-size: .95rem; }
+  .review-item:last-child { border-bottom: none; }
+  .review-item span { font-weight: 600; color: #475569; display: inline-block; width: 130px; }
+
+  /* Sucesso */
+  #successScreen { display: none; text-align: center; padding: 2rem; }
+  #successScreen .emoji { font-size: 4rem; }
+  #successScreen h2 { color: #15803d; margin: 1rem 0 .5rem; }
+  #successScreen p { color: #64748b; line-height: 1.6; }
+
+  .error { color: #dc2626; font-size: .85rem; margin-top: .4rem; display: none; }
+  .success-msg { color: #15803d; font-size: .85rem; margin-top: .4rem; font-weight: 600; }
+
+  /* Steps */
+  .step { display: none; }
+  .step.active { display: block; }
+
+  /* Spinner */
+  .spinner {
+    display: inline-block;
+    width: 20px; height: 20px;
+    border: 3px solid rgba(255,255,255,.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin .7s linear infinite;
+    vertical-align: middle;
+    margin-right: 8px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  @media (max-width: 480px) {
+    header h1 { font-size: 1.4rem; }
+    .card { padding: 1.4rem; }
+    .row { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div style="font-size:2rem;margin-bottom:.5rem">🎯</div>
+  <h1>Formulário de Candidatura</h1>
+  <p>Preencha as etapas abaixo para concluir sua candidatura</p>
+</header>
+
+<div class="progress-bar">
+  <div class="progress-fill" id="progressFill" style="width:0%"></div>
+</div>
+
+<div class="container">
+
+  <!-- ── ETAPA 1 ── -->
+  <div class="step active" id="step1">
+    <div class="card">
+      <span class="step-label">Etapa 1 de 4</span>
+      <h2>👤 Dados de Contato & Cargo</h2>
+
+      <label>Nome completo *</label>
+      <input type="text" id="nome" placeholder="Ex.: Maria da Silva"/>
+      <div class="error" id="erroNome">Nome é obrigatório.</div>
+
+      <label>E-mail *</label>
+      <input type="email" id="email" placeholder="maria@email.com"/>
+      <div class="error" id="erroEmail">E-mail inválido.</div>
+
+      <label>WhatsApp *</label>
+      <div class="row">
+        <select id="pais" onchange="atualizarPais()" style="max-width:200px">
+          <option value="+55" data-mask="(99) 99999-9999">🇧🇷 Brasil +55</option>
+          <option value="+1"  data-mask="(999) 999-9999">🇺🇸 EUA/Canadá +1</option>
+          <option value="+351" data-mask="999 999 999">🇵🇹 Portugal +351</option>
+          <option value="+54" data-mask="(99) 9999-9999">🇦🇷 Argentina +54</option>
+          <option value="+56" data-mask="9 9999 9999">🇨🇱 Chile +56</option>
+          <option value="+57" data-mask="999 999 9999">🇨🇴 Colômbia +57</option>
+          <option value="+52" data-mask="(99) 9999-9999">🇲🇽 México +52</option>
+          <option value="+595" data-mask="999 999 999">🇵🇾 Paraguai +595</option>
+          <option value="+598" data-mask="99 999 999">🇺🇾 Uruguai +598</option>
+          <option value="+51" data-mask="999 999 999">🇵🇪 Peru +51</option>
+          <option value="+58" data-mask="(99) 9999-9999">🇻🇪 Venezuela +58</option>
+          <option value="+34" data-mask="999 99 99 99">🇪🇸 Espanha +34</option>
+          <option value="+44" data-mask="9999 999999">🇬🇧 Reino Unido +44</option>
+          <option value="+49" data-mask="9999 999999">🇩🇪 Alemanha +49</option>
+          <option value="+244" data-mask="999 999 999">🇦🇴 Angola +244</option>
+          <option value="+258" data-mask="99 999 9999">🇲🇿 Moçambique +258</option>
+        </select>
+        <input type="tel" id="whatsapp" placeholder="(81) 99152-3733" oninput="mascaraWA(this)" maxlength="20"/>
+      </div>
+      <div class="error" id="erroWA">WhatsApp inválido.</div>
+
+      <label>Vaga / Cargo pretendido *</label>
+      <select id="cargo" onchange="toggleOutro()">
+        <optgroup label="Administração & Gestão">
+          <option>Assistente Administrativo</option>
+          <option>Auxiliar Administrativo</option>
+          <option>Recepcionista</option>
+          <option>Secretário(a) Executivo(a)</option>
+          <option>Gerente Administrativo</option>
+          <option>Diretor(a) Administrativo</option>
+          <option>Analista Administrativo</option>
+        </optgroup>
+        <optgroup label="RH & Pessoas">
+          <option>Analista de RH</option>
+          <option>Assistente de RH</option>
+          <option>Recrutador(a)</option>
+          <option>Especialista em Treinamento e Desenvolvimento</option>
+          <option>Gerente de RH</option>
+          <option>Diretor(a) de RH</option>
+          <option>Analista de Departamento Pessoal</option>
+        </optgroup>
+        <optgroup label="Financeiro & Contabilidade">
+          <option>Analista Financeiro</option>
+          <option>Assistente Financeiro</option>
+          <option>Contador(a)</option>
+          <option>Auxiliar de Contabilidade</option>
+          <option>Gerente Financeiro</option>
+          <option>Diretor(a) Financeiro</option>
+          <option>Tesoureiro(a)</option>
+          <option>Analista de Custos</option>
+          <option>Auditor(a) Interno</option>
+        </optgroup>
+        <optgroup label="TI & Tecnologia">
+          <option>Analista de TI</option>
+          <option>Desenvolvedor(a) de Software</option>
+          <option>Desenvolvedor(a) Front-end</option>
+          <option>Desenvolvedor(a) Back-end</option>
+          <option>Desenvolvedor(a) Full Stack</option>
+          <option>Desenvolvedor(a) Mobile</option>
+          <option>Engenheiro(a) de Software</option>
+          <option>Analista de Sistemas</option>
+          <option>DevOps Engineer</option>
+          <option>Analista de Suporte Técnico</option>
+          <option>Técnico(a) de TI</option>
+          <option>Administrador(a) de Redes</option>
+          <option>Analista de Segurança da Informação</option>
+          <option>Analista de Dados</option>
+          <option>Cientista de Dados</option>
+          <option>Engenheiro(a) de Dados</option>
+          <option>UX/UI Designer</option>
+          <option>Product Manager</option>
+          <option>Scrum Master</option>
+        </optgroup>
+        <optgroup label="Comercial & Vendas">
+          <option>Representante de Vendas</option>
+          <option>Consultor(a) de Vendas</option>
+          <option>Gerente Comercial</option>
+          <option>Diretor(a) Comercial</option>
+          <option>Supervisor(a) de Vendas</option>
+          <option>Executivo(a) de Contas</option>
+          <option>Assistente Comercial</option>
+          <option>Operador(a) de Televendas</option>
+          <option>Promotor(a) de Vendas</option>
+        </optgroup>
+        <optgroup label="Marketing & Comunicação">
+          <option>Analista de Marketing</option>
+          <option>Assistente de Marketing</option>
+          <option>Gerente de Marketing</option>
+          <option>Social Media</option>
+          <option>Designer Gráfico</option>
+          <option>Redator(a) / Copywriter</option>
+          <option>Analista de SEO</option>
+          <option>Gestor(a) de Tráfego Pago</option>
+          <option>Produtor(a) de Conteúdo</option>
+          <option>Fotógrafo(a)</option>
+          <option>Videomaker</option>
+        </optgroup>
+        <optgroup label="Operações & Logística">
+          <option>Operador(a) de Logística</option>
+          <option>Auxiliar de Logística</option>
+          <option>Analista de Logística</option>
+          <option>Gerente de Operações</option>
+          <option>Supervisor(a) de Operações</option>
+          <option>Almoxarife</option>
+          <option>Motorista</option>
+          <option>Entregador(a)</option>
+          <option>Operador(a) de Empilhadeira</option>
+        </optgroup>
+        <optgroup label="Produção & Indústria">
+          <option>Auxiliar de Produção</option>
+          <option>Operador(a) de Produção</option>
+          <option>Supervisor(a) de Produção</option>
+          <option>Gerente de Produção</option>
+          <option>Técnico(a) de Manutenção</option>
+          <option>Mecânico(a) Industrial</option>
+          <option>Eletricista Industrial</option>
+          <option>Técnico(a) de Qualidade</option>
+          <option>Analista de Qualidade</option>
+          <option>Engenheiro(a) de Produção</option>
+          <option>Engenheiro(a) de Qualidade</option>
+        </optgroup>
+        <optgroup label="Atendimento">
+          <option>Atendente</option>
+          <option>Operador(a) de Call Center</option>
+          <option>Supervisor(a) de Atendimento</option>
+          <option>Analista de Customer Success</option>
+          <option>Gerente de Customer Success</option>
+        </optgroup>
+        <optgroup label="Jurídico">
+          <option>Advogado(a)</option>
+          <option>Assistente Jurídico</option>
+          <option>Analista Jurídico</option>
+          <option>Gerente Jurídico</option>
+        </optgroup>
+        <optgroup label="Saúde">
+          <option>Médico(a)</option>
+          <option>Enfermeiro(a)</option>
+          <option>Técnico(a) de Enfermagem</option>
+          <option>Fisioterapeuta</option>
+          <option>Nutricionista</option>
+          <option>Psicólogo(a)</option>
+          <option>Farmacêutico(a)</option>
+          <option>Assistente Social</option>
+        </optgroup>
+        <optgroup label="Educação">
+          <option>Professor(a)</option>
+          <option>Coordenador(a) Pedagógico</option>
+          <option>Instrutor(a) de Treinamento</option>
+          <option>Tutor(a) EAD</option>
+        </optgroup>
+        <optgroup label="Engenharia & Projetos">
+          <option>Engenheiro(a) Civil</option>
+          <option>Engenheiro(a) Elétrico</option>
+          <option>Engenheiro(a) Mecânico</option>
+          <option>Engenheiro(a) Químico</option>
+          <option>Analista de Projetos</option>
+          <option>Gerente de Projetos</option>
+          <option>Arquiteto(a)</option>
+          <option>Técnico(a) em Edificações</option>
+        </optgroup>
+        <optgroup label="Compras & Supply Chain">
+          <option>Analista de Compras</option>
+          <option>Assistente de Compras</option>
+          <option>Gerente de Compras</option>
+          <option>Analista de Supply Chain</option>
+        </optgroup>
+        <optgroup label="Outros">
+          <option>Estagiário(a)</option>
+          <option>Jovem Aprendiz</option>
+          <option value="outro">Outro (digitar abaixo)</option>
+        </optgroup>
+      </select>
+      <input type="text" id="cargoOutro" placeholder="Digite o cargo desejado" style="display:none;margin-top:8px"/>
+
+      <button class="btn btn-primary" onclick="avancar1()">Avançar →</button>
+    </div>
+  </div>
+
+  <!-- ── ETAPA 2 ── -->
+  <div class="step" id="step2">
+    <div class="card">
+      <span class="step-label">Etapa 2 de 4</span>
+      <h2>🎥 Vídeo de Apresentação</h2>
+
+      <div class="info-box">
+        📌 <strong>Dicas:</strong> Fale sobre você, sua experiência e qualificações.<br>
+        Duração máxima: <strong>2 minutos</strong>. Regrave quantas vezes quiser!
+      </div>
+
+      <video id="videoPreview" autoplay muted playsinline></video>
+
+      <div class="video-btns">
+        <button class="btn btn-primary" id="btnIniciar" onclick="iniciarGravacao()" style="flex:1;margin-top:0">▶ Iniciar Gravação</button>
+        <button class="btn" id="btnParar" onclick="pararGravacao()" disabled style="background:#dc2626;color:white">⏹ Parar</button>
+        <button class="btn btn-secondary" id="btnRegravar" onclick="regravar()" disabled>🔄 Regravar</button>
+      </div>
+
+      <div id="timer"></div>
+      <div id="resultArea"></div>
+      <div class="error" id="erroVideo">Por favor, grave um vídeo antes de avançar.</div>
+
+      <div class="btn-row">
+        <button class="btn btn-secondary" onclick="voltar(1)">← Voltar</button>
+        <button class="btn btn-primary" onclick="avancar2()">Avançar →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── ETAPA 3 ── -->
+  <div class="step" id="step3">
+    <div class="card">
+      <span class="step-label">Etapa 3 de 4</span>
+      <h2>📄 Currículo</h2>
+
+      <div class="info-box">
+        Anexe seu currículo em PDF ou Word.
+      </div>
+
+      <label class="upload-area" for="curriculoInput">
+        <input type="file" id="curriculoInput" accept=".pdf,.doc,.docx" onchange="curriculoSelecionado()"/>
+        <div class="icon">📎</div>
+        <p><strong>Clique para selecionar</strong> ou arraste aqui</p>
+        <p style="margin-top:.3rem">PDF, DOC ou DOCX</p>
+      </label>
+      <div id="curriculoNome" class="success-msg" style="display:none"></div>
+      <div class="error" id="erroCurriculo">Por favor, anexe seu currículo.</div>
+
+      <div class="btn-row">
+        <button class="btn btn-secondary" onclick="voltar(2)">← Voltar</button>
+        <button class="btn btn-primary" onclick="avancar3()">Avançar →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── ETAPA 4 ── -->
+  <div class="step" id="step4">
+    <div class="card">
+      <span class="step-label">Etapa 4 de 4</span>
+      <h2>✅ Revisão & Envio</h2>
+
+      <div id="resumo"></div>
+
+      <div class="info-box" style="margin-top:1rem">
+        Ao clicar em <strong>Enviar candidatura</strong>, seus dados serão armazenados com segurança e nossa equipe de RH entrará em contato em breve.
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-secondary" onclick="voltar(3)">← Voltar</button>
+        <button class="btn btn-primary" id="btnEnviar" onclick="enviarCandidatura()">🚀 Enviar candidatura</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SUCESSO ── -->
+  <div id="successScreen">
+    <div class="card">
+      <div class="emoji">🎉</div>
+      <h2>Candidatura enviada com sucesso!</h2>
+      <p id="successMsg"></p>
+      <button class="btn btn-primary" onclick="novaCandidatura()" style="max-width:300px;margin:1.5rem auto 0">📝 Nova candidatura</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ── Supabase ──────────────────────────────────────────────────────────────
+const SUPABASE_URL = 'https://qbtroafavgbvrznggppr.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_dRdDtbCgntJ0T5cAEmxbfg_H_4maUDd';
+
+async function sbUpload(bucket, path, file, contentType) {
+  const res = await fetch(`${SUPABASE_URL}/storage/v1/object/${bucket}/${path}`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${SUPABASE_KEY}`,
+      'Content-Type': contentType,
+      'x-upsert': 'true'
+    },
+    body: file
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return `${SUPABASE_URL}/storage/v1/object/public/${bucket}/${path}`;
+}
+
+async function sbInsert(table, data) {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${SUPABASE_KEY}`,
+      'apikey': SUPABASE_KEY,
+      'Content-Type': 'application/json',
+      'Prefer': 'return=minimal'
+    },
+    body: JSON.stringify(data)
+  });
+  if (!res.ok) throw new Error(await res.text());
+}
+
+// ── Estado ────────────────────────────────────────────────────────────────
+let etapaAtual = 1;
+let videoBlob = null;
+let curriculoFile = null;
+let mediaRecorder, stream, chunks = [], timerInt, elapsed = 0;
+
+// ── Progresso ─────────────────────────────────────────────────────────────
+function setProgress(n) {
+  document.getElementById('progressFill').style.width = ((n-1)/4*100) + '%';
+}
+
+function mostrarEtapa(n) {
+  document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+  document.getElementById('step' + n).classList.add('active');
+  document.getElementById('successScreen').style.display = 'none';
+  etapaAtual = n;
+  setProgress(n);
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function voltar(n) { mostrarEtapa(n); }
+
+// ── WhatsApp mask ─────────────────────────────────────────────────────────
+function getMask() {
+  const sel = document.getElementById('pais');
+  return sel.options[sel.selectedIndex].dataset.mask || '99999999999';
+}
+function atualizarPais() {
+  document.getElementById('whatsapp').value = '';
+  document.getElementById('whatsapp').placeholder = getMask().replace(/9/g,'0');
+}
+function mascaraWA(el) {
+  let digits = el.value.replace(/\D/g,'');
+  let mask = getMask();
+  let result = '';
+  let di = 0;
+  for (let i = 0; i < mask.length && di < digits.length; i++) {
+    if (mask[i] === '9') { result += digits[di++]; }
+    else { result += mask[i]; if (digits[di] === mask[i]) di++; }
+  }
+  el.value = result;
+}
+
+// ── Cargo outro ───────────────────────────────────────────────────────────
+function toggleOutro() {
+  const sel = document.getElementById('cargo');
+  const inp = document.getElementById('cargoOutro');
+  inp.style.display = sel.value === 'outro' ? 'block' : 'none';
+}
+
+// ── Etapa 1 ───────────────────────────────────────────────────────────────
+function avancar1() {
+  let ok = true;
+  const nome  = document.getElementById('nome').value.trim();
+  const email = document.getElementById('email').value.trim();
+  const wa    = document.getElementById('whatsapp').value.trim();
+  const cargo = document.getElementById('cargo').value;
+  const outro = document.getElementById('cargoOutro').value.trim();
+
+  mostrarErro('erroNome',  !nome);
+  mostrarErro('erroEmail', !validarEmail(email));
+  mostrarErro('erroWA',    wa.replace(/\D/g,'').length < 6);
+
+  if (!nome || !validarEmail(email) || wa.replace(/\D/g,'').length < 6) return;
+  if (cargo === 'outro' && !outro) {
+    document.getElementById('cargoOutro').style.border = '1.5px solid #dc2626';
+    return;
+  }
+  mostrarEtapa(2);
+}
+
+function validarEmail(e) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e); }
+function mostrarErro(id, show) {
+  document.getElementById(id).style.display = show ? 'block' : 'none';
+}
+
+// ── Gravação de vídeo ─────────────────────────────────────────────────────
+async function iniciarGravacao() {
+  chunks = []; elapsed = 0;
+  document.getElementById('resultArea').innerHTML = '';
+  document.getElementById('erroVideo').style.display = 'none';
+
+  stream = await navigator.mediaDevices.getUserMedia({video:true, audio:true});
+  document.getElementById('videoPreview').srcObject = stream;
+
+  // Contagem regressiva
+  const timer = document.getElementById('timer');
+  await new Promise(resolve => {
+    let c = 5;
+    timer.style.color = '#f59e0b';
+    timer.textContent = '🎬 Gravando em ' + c + '...';
+    const cd = setInterval(() => {
+      c--;
+      if (c > 0) { timer.textContent = '🎬 Gravando em ' + c + '...'; }
+      else { clearInterval(cd); timer.style.color = '#dc2626'; resolve(); }
+    }, 1000);
+  });
+
+  mediaRecorder = new MediaRecorder(stream);
+  mediaRecorder.ondataavailable = e => { if (e.data.size) chunks.push(e.data); };
+  mediaRecorder.onstop = () => {
+    videoBlob = new Blob(chunks, {type:'video/webm'});
+    const url = URL.createObjectURL(videoBlob);
+    const area = document.getElementById('resultArea');
+    area.innerHTML = '';
+    const p = document.createElement('p');
+    p.textContent = '✅ Gravação concluída! Revise abaixo:';
+    p.style.cssText = 'color:#15803d;font-weight:600;margin-bottom:.5rem';
+    const vid = document.createElement('video');
+    vid.src = url; vid.controls = true;
+    vid.style.cssText = 'width:100%;border-radius:10px;max-height:260px;display:block';
+    area.appendChild(p);
+    area.appendChild(vid);
+    clearInterval(timerInt);
+    timer.textContent = '';
+    document.getElementById('videoPreview').srcObject = null;
+    document.getElementById('videoPreview').style.display = 'none';
+  };
+
+  mediaRecorder.start(1000);
+  document.getElementById('btnIniciar').disabled = true;
+  document.getElementById('btnParar').disabled   = false;
+  timerInt = setInterval(() => {
+    elapsed++;
+    const m = String(Math.floor(elapsed/60)).padStart(2,'0');
+    const s = String(elapsed%60).padStart(2,'0');
+    timer.textContent = '⏱ ' + m + ':' + s + ' / 02:00';
+    if (elapsed >= 120) pararGravacao();
+  }, 1000);
+}
+
+function pararGravacao() {
+  mediaRecorder.stop();
+  stream.getTracks().forEach(t => t.stop());
+  document.getElementById('btnIniciar').disabled  = false;
+  document.getElementById('btnParar').disabled    = true;
+  document.getElementById('btnRegravar').disabled = false;
+}
+
+function regravar() {
+  videoBlob = null;
+  document.getElementById('resultArea').innerHTML = '';
+  document.getElementById('btnRegravar').disabled = true;
+  document.getElementById('videoPreview').style.display = 'block';
+  iniciarGravacao();
+}
+
+function avancar2() {
+  if (!videoBlob) { document.getElementById('erroVideo').style.display = 'block'; return; }
+  mostrarEtapa(3);
+}
+
+// ── Currículo ─────────────────────────────────────────────────────────────
+function curriculoSelecionado() {
+  curriculoFile = document.getElementById('curriculoInput').files[0];
+  const el = document.getElementById('curriculoNome');
+  el.textContent = '✅ ' + curriculoFile.name;
+  el.style.display = 'block';
+  document.getElementById('erroCurriculo').style.display = 'none';
+}
+
+function avancar3() {
+  if (!curriculoFile) { document.getElementById('erroCurriculo').style.display = 'block'; return; }
+  // Monta resumo
+  const nome  = document.getElementById('nome').value.trim();
+  const email = document.getElementById('email').value.trim();
+  const ddi   = document.getElementById('pais').value;
+  const wa    = ddi + ' ' + document.getElementById('whatsapp').value.trim();
+  const cargo = document.getElementById('cargo').value === 'outro'
+    ? document.getElementById('cargoOutro').value.trim()
+    : document.getElementById('cargo').value;
+
+  document.getElementById('resumo').innerHTML = `
+    <div class="review-item"><span>👤 Nome</span>${nome}</div>
+    <div class="review-item"><span>✉️ E-mail</span>${email}</div>
+    <div class="review-item"><span>📱 WhatsApp</span>${wa}</div>
+    <div class="review-item"><span>🎯 Cargo</span>${cargo}</div>
+    <div class="review-item"><span>🎥 Vídeo</span>${(videoBlob.size/1e6).toFixed(1)} MB gravado</div>
+    <div class="review-item"><span>📄 Currículo</span>${curriculoFile.name}</div>
+  `;
+  mostrarEtapa(4);
+}
+
+// ── Envio ─────────────────────────────────────────────────────────────────
+async function enviarCandidatura() {
+  const btn = document.getElementById('btnEnviar');
+  btn.innerHTML = '<span class="spinner"></span> Enviando...';
+  btn.disabled = true;
+
+  try {
+    const id    = crypto.randomUUID();
+    const nome  = document.getElementById('nome').value.trim();
+    const email = document.getElementById('email').value.trim();
+    const ddi   = document.getElementById('pais').value;
+    const wa    = ddi + ' ' + document.getElementById('whatsapp').value.trim();
+    const cargo = document.getElementById('cargo').value === 'outro'
+      ? document.getElementById('cargoOutro').value.trim()
+      : document.getElementById('cargo').value;
+
+    const ext = curriculoFile.name.split('.').pop();
+
+    const videoUrl = await sbUpload('candidaturas', `${id}/video.webm`, videoBlob, 'video/webm');
+    const currUrl  = await sbUpload('candidaturas', `${id}/curriculo.${ext}`, curriculoFile, curriculoFile.type);
+
+    await sbInsert('candidatos', {
+      id, nome, email, whatsapp: wa, cargo,
+      video_url: videoUrl, curriculo_url: currUrl
+    });
+
+    // Sucesso
+    document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+    document.getElementById('successScreen').style.display = 'block';
+    document.getElementById('successMsg').innerHTML =
+      `Olá, <strong>${nome}</strong>!<br>Recebemos sua candidatura para a vaga de <strong>${cargo}</strong>.<br>Nossa equipe de RH analisará seu perfil e entrará em contato em breve.`;
+    setProgress(4);
+    window.scrollTo({top:0, behavior:'smooth'});
+
+  } catch(e) {
+    alert('Erro ao enviar: ' + e.message);
+    btn.innerHTML = '🚀 Enviar candidatura';
+    btn.disabled = false;
+  }
+}
+
+function novaCandidatura() {
+  videoBlob = null; curriculoFile = null;
+  document.getElementById('nome').value = '';
+  document.getElementById('email').value = '';
+  document.getElementById('whatsapp').value = '';
+  document.getElementById('resultArea').innerHTML = '';
+  document.getElementById('curriculoNome').style.display = 'none';
+  document.getElementById('videoPreview').style.display = 'block';
+  document.getElementById('btnIniciar').disabled  = false;
+  document.getElementById('btnParar').disabled    = true;
+  document.getElementById('btnRegravar').disabled = true;
+  document.getElementById('btnEnviar').innerHTML  = '🚀 Enviar candidatura';
+  document.getElementById('btnEnviar').disabled   = false;
+  mostrarEtapa(1);
+}
+</script>
+</body>
+</html>
