@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Tutorial – gestorRH</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body { font-family: 'Inter', system-ui, sans-serif; background: #0a0f1e; color: #e2e8f0; }
+
+/* ── HERO ── */
+.hero {
+  min-height: 100vh; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; text-align: center;
+  padding: 2rem; position: relative; overflow: hidden;
+  background: linear-gradient(135deg, #0a0f1e 0%, #0f1b35 50%, #0a0f1e 100%);
+}
+.hero-bg {
+  position: absolute; inset: 0; z-index: 0;
+  background:
+    radial-gradient(ellipse at 20% 40%, rgba(99,102,241,.2) 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 60%, rgba(14,165,233,.15) 0%, transparent 60%),
+    radial-gradient(ellipse at 50% 90%, rgba(168,85,247,.1) 0%, transparent 50%);
+  animation: heroBg 8s ease-in-out infinite alternate;
+}
+@keyframes heroBg {
+  from { opacity: .7; }
+  to   { opacity: 1; }
+}
+.hero-grid {
+  position: absolute; inset: 0; z-index: 0;
+  background-image:
+    linear-gradient(rgba(99,102,241,.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(99,102,241,.05) 1px, transparent 1px);
+  background-size: 60px 60px;
+}
+.hero-content { position: relative; z-index: 1; max-width: 700px; }
+.hero-badge {
+  display: inline-block;
+  background: rgba(99,102,241,.15); border: 1px solid rgba(99,102,241,.4);
+  color: #a5b4fc; border-radius: 999px; padding: 6px 18px;
+  font-size: .8rem; font-weight: 600; letter-spacing: 1px; text-transform: uppercase;
+  margin-bottom: 1.5rem;
+}
+.hero h1 {
+  font-size: clamp(2.5rem, 6vw, 4.5rem); font-weight: 900;
+  line-height: 1.1; letter-spacing: -2px; margin-bottom: 1rem;
+  background: linear-gradient(135deg, #fff 30%, #a5b4fc 60%, #7dd3fc);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.hero p {
+  font-size: 1.15rem; color: rgba(255,255,255,.5); line-height: 1.7;
+  margin-bottom: 2.5rem; font-weight: 400;
+}
+.hero-btns { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+.btn-hero {
+  padding: 14px 32px; border-radius: 12px; font-size: 15px; font-weight: 700;
+  cursor: pointer; border: none; text-decoration: none; transition: all .2s;
+}
+.btn-hero-primary {
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  color: white; box-shadow: 0 8px 32px rgba(99,102,241,.4);
+}
+.btn-hero-primary:hover { transform: translateY(-2px); box-shadow: 0 12px 40px rgba(99,102,241,.5); }
+.btn-hero-secondary {
+  background: rgba(255,255,255,.07); color: white;
+  border: 1px solid rgba(255,255,255,.15);
+}
+.btn-hero-secondary:hover { background: rgba(255,255,255,.12); }
+
+/* ── NAV ── */
+nav {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(10,15,30,.85); backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(255,255,255,.08);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: .8rem 2rem; gap: 1rem;
+}
+.nav-logo { font-weight: 800; font-size: 1.1rem; color: white; letter-spacing: -.5px; }
+.nav-logo span { color: #6366f1; }
+.nav-links { display: flex; gap: 6px; }
+.nav-link {
+  padding: 7px 16px; border-radius: 8px; font-size: .85rem; font-weight: 600;
+  cursor: pointer; text-decoration: none; color: rgba(255,255,255,.6);
+  transition: all .2s; border: none; background: none;
+}
+.nav-link:hover, .nav-link.active { background: rgba(99,102,241,.15); color: #a5b4fc; }
+
+/* ── SEÇÕES ── */
+section { padding: 5rem 1rem; }
+.section-inner { max-width: 900px; margin: 0 auto; }
+
+.section-header { text-align: center; margin-bottom: 3.5rem; }
+.section-badge {
+  display: inline-block; border-radius: 999px; padding: 5px 16px;
+  font-size: .75rem; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase;
+  margin-bottom: 1rem;
+}
+.badge-purple { background: rgba(99,102,241,.15); color: #a5b4fc; border: 1px solid rgba(99,102,241,.3); }
+.badge-blue   { background: rgba(14,165,233,.15); color: #7dd3fc; border: 1px solid rgba(14,165,233,.3); }
+.badge-green  { background: rgba(16,185,129,.15); color: #6ee7b7; border: 1px solid rgba(16,185,129,.3); }
+
+.section-header h2 {
+  font-size: clamp(1.8rem, 4vw, 2.8rem); font-weight: 800;
+  letter-spacing: -1px; color: white; margin-bottom: .8rem;
+}
+.section-header p { color: rgba(255,255,255,.45); font-size: 1rem; line-height: 1.7; max-width: 600px; margin: 0 auto; }
+
+/* ── STEPS ── */
+.steps { display: flex; flex-direction: column; gap: 1.5rem; }
+.step-card {
+  display: flex; gap: 1.5rem; align-items: flex-start;
+  background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.07);
+  border-radius: 16px; padding: 1.5rem 2rem;
+  transition: border .3s, background .3s;
+  position: relative; overflow: hidden;
+}
+.step-card:hover {
+  border-color: rgba(99,102,241,.3);
+  background: rgba(99,102,241,.05);
+}
+.step-card::before {
+  content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+  border-radius: 3px 0 0 3px;
+}
+.step-purple::before { background: linear-gradient(180deg, #6366f1, #8b5cf6); }
+.step-blue::before   { background: linear-gradient(180deg, #0ea5e9, #06b6d4); }
+.step-green::before  { background: linear-gradient(180deg, #10b981, #059669); }
+
+.step-number {
+  min-width: 44px; height: 44px; border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.1rem; font-weight: 800; flex-shrink: 0;
+}
+.num-purple { background: rgba(99,102,241,.2); color: #a5b4fc; }
+.num-blue   { background: rgba(14,165,233,.2); color: #7dd3fc; }
+.num-green  { background: rgba(16,185,129,.2); color: #6ee7b7; }
+
+.step-body h3 { font-size: 1rem; font-weight: 700; color: white; margin-bottom: .4rem; }
+.step-body p  { font-size: .9rem; color: rgba(255,255,255,.5); line-height: 1.6; }
+.step-body .tip {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.08);
+  border-radius: 8px; padding: 6px 12px; margin-top: .8rem;
+  font-size: .82rem; color: rgba(255,255,255,.4);
+}
+
+/* ── DIVISOR ── */
+.divider {
+  border: none; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.08), transparent);
+  margin: 0;
+}
+
+/* ── MÓDULOS OVERVIEW ── */
+.modulos { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.2rem; margin-bottom: 4rem; }
+.modulo-card {
+  background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.07);
+  border-radius: 16px; padding: 1.5rem; text-align: center; cursor: pointer;
+  transition: all .25s; text-decoration: none;
+}
+.modulo-card:hover { transform: translateY(-4px); }
+.modulo-card.purple:hover { border-color: rgba(99,102,241,.5); background: rgba(99,102,241,.08); }
+.modulo-card.blue:hover   { border-color: rgba(14,165,233,.5); background: rgba(14,165,233,.08); }
+.modulo-card.green:hover  { border-color: rgba(16,185,129,.5); background: rgba(16,185,129,.08); }
+.modulo-icon { font-size: 2.5rem; margin-bottom: .8rem; }
+.modulo-card h3 { font-size: 1rem; font-weight: 700; color: white; margin-bottom: .4rem; }
+.modulo-card p  { font-size: .85rem; color: rgba(255,255,255,.4); line-height: 1.5; }
+.modulo-tag {
+  display: inline-block; border-radius: 999px; padding: 3px 10px;
+  font-size: .72rem; font-weight: 600; margin-top: .8rem;
+}
+.tag-purple { background: rgba(99,102,241,.2); color: #a5b4fc; }
+.tag-blue   { background: rgba(14,165,233,.2); color: #7dd3fc; }
+.tag-green  { background: rgba(16,185,129,.2); color: #6ee7b7; }
+
+/* ── FOOTER ── */
+footer {
+  text-align: center; padding: 3rem 1rem;
+  border-top: 1px solid rgba(255,255,255,.06);
+  color: rgba(255,255,255,.25); font-size: .85rem;
+}
+footer strong { color: rgba(255,255,255,.5); }
+
+/* ── BG SECTIONS ── */
+#candidato { background: linear-gradient(180deg, #0a0f1e 0%, #0d1229 100%); }
+#rh        { background: linear-gradient(180deg, #0d1229 0%, #0a1520 100%); }
+#empresa   { background: linear-gradient(180deg, #0a1520 0%, #0a0f1e 100%); }
+
+@media(max-width:600px) {
+  .step-card { flex-direction: column; gap: 1rem; padding: 1.2rem; }
+  nav { padding: .8rem 1rem; }
+  .nav-links { gap: 2px; }
+  .nav-link { padding: 6px 10px; font-size: .78rem; }
+  .hero h1 { letter-spacing: -1px; }
+}
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-grid"></div>
+  <div class="hero-content">
+    <div class="hero-badge">📖 Guia de Utilização</div>
+    <h1>Como usar o gestorRH</h1>
+    <p>Tudo que você precisa saber para usar o sistema completo de gestão de candidaturas — do candidato ao RH e às empresas parceiras.</p>
+    <div class="hero-btns">
+      <a href="#candidato" class="btn-hero btn-hero-primary">📝 Módulo Candidato</a>
+      <a href="#rh" class="btn-hero btn-hero-secondary">🎯 Módulo RH</a>
+      <a href="#empresa" class="btn-hero btn-hero-secondary">🏢 Módulo Empresa</a>
+    </div>
+  </div>
+</div>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">gestor<span>RH</span></div>
+  <div class="nav-links">
+    <a href="#candidato" class="nav-link">📝 Candidato</a>
+    <a href="#rh" class="nav-link">🎯 RH</a>
+    <a href="#empresa" class="nav-link">🏢 Empresa</a>
+  </div>
+</nav>
+
+<!-- OVERVIEW -->
+<section style="background:#0a0f1e;padding:4rem 1rem 2rem">
+  <div class="section-inner">
+    <div class="modulos">
+      <a href="#candidato" class="modulo-card purple">
+        <div class="modulo-icon">📝</div>
+        <h3>Módulo Candidato</h3>
+        <p>Formulário de candidatura com gravação de vídeo e envio de currículo</p>
+        <span class="modulo-tag tag-purple">Para candidatos</span>
+      </a>
+      <a href="#rh" class="modulo-card blue">
+        <div class="modulo-icon">🎯</div>
+        <h3>Módulo RH</h3>
+        <p>Painel completo para gerenciar candidatos, pareceres e empresas</p>
+        <span class="modulo-tag tag-blue">Para o RH</span>
+      </a>
+      <a href="#empresa" class="modulo-card green">
+        <div class="modulo-icon">🏢</div>
+        <h3>Módulo Empresa</h3>
+        <p>Portal exclusivo para empresas visualizarem candidatos selecionados</p>
+        <span class="modulo-tag tag-green">Para empresas</span>
+      </a>
+    </div>
+  </div>
+</section>
+
+<hr class="divider"/>
+
+<!-- CANDIDATO -->
+<section id="candidato">
+  <div class="section-inner">
+    <div class="section-header">
+      <span class="section-badge badge-purple">Módulo 1</span>
+      <h2>📝 Formulário de Candidatura</h2>
+      <p>O candidato acessa o link, preenche os dados, grava o vídeo de apresentação e envia o currículo — tudo em 4 etapas simples.</p>
+    </div>
+
+    <div class="steps">
+      <div class="step-card step-purple">
+        <div class="step-number num-purple">1</div>
+        <div class="step-body">
+          <h3>Dados de Contato & Cargo</h3>
+          <p>O candidato preenche nome completo, e-mail e WhatsApp com seleção do país. Em seguida escolhe a vaga pretendida na lista de cargos disponíveis. Caso o cargo não esteja na lista, pode digitar manualmente no campo "Outro".</p>
+          <span class="tip">💡 O campo WhatsApp aceita números internacionais com seleção de país</span>
+        </div>
+      </div>
+
+      <div class="step-card step-purple">
+        <div class="step-number num-purple">2</div>
+        <div class="step-body">
+          <h3>Vídeo de Apresentação</h3>
+          <p>O candidato grava um vídeo de até 2 minutos diretamente pelo navegador, sem precisar instalar nada. Há uma contagem regressiva de 5 segundos para se preparar. Pode regravar quantas vezes quiser antes de avançar. No celular, a câmera frontal ou traseira pode ser usada.</p>
+          <span class="tip">⏱ O sistema para automaticamente aos 2 minutos</span>
+        </div>
+      </div>
+
+      <div class="step-card step-purple">
+        <div class="step-number num-purple">3</div>
+        <div class="step-body">
+          <h3>Anexar Currículo</h3>
+          <p>O candidato anexa o currículo nos formatos PDF, DOC ou DOCX. No celular, pode selecionar arquivos salvos no dispositivo, Google Drive, WhatsApp ou qualquer outro aplicativo de armazenamento.</p>
+          <span class="tip">📎 Formatos aceitos: PDF, DOC e DOCX</span>
+        </div>
+      </div>
+
+      <div class="step-card step-purple">
+        <div class="step-number num-purple">4</div>
+        <div class="step-body">
+          <h3>Revisão & Envio</h3>
+          <p>Antes de enviar, o candidato revisa todos os dados: nome, e-mail, WhatsApp, cargo, tamanho do vídeo e nome do currículo. Ao clicar em "Enviar candidatura", tudo é enviado diretamente para o banco de dados seguro na nuvem.</p>
+          <span class="tip">✅ Após o envio aparece uma confirmação com o nome e cargo</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider"/>
+
+<!-- RH -->
+<section id="rh">
+  <div class="section-inner">
+    <div class="section-header">
+      <span class="section-badge badge-blue">Módulo 2</span>
+      <h2>🎯 Painel do RH</h2>
+      <p>Acesso exclusivo para a equipe de RH. Gerencie todos os candidatos, escreva pareceres e controle o acesso das empresas parceiras.</p>
+    </div>
+
+    <div class="steps">
+      <div class="step-card step-blue">
+        <div class="step-number num-blue">1</div>
+        <div class="step-body">
+          <h3>Acesso ao Painel</h3>
+          <p>Acesse o link do painel RH e faça login com usuário e senha. As credenciais são definidas diretamente no sistema e podem ser alteradas a qualquer momento pelo administrador.</p>
+          <span class="tip">🔐 Login com e-mail e senha exclusivos do RH</span>
+        </div>
+      </div>
+
+      <div class="step-card step-blue">
+        <div class="step-number num-blue">2</div>
+        <div class="step-body">
+          <h3>Visualizar Candidatos</h3>
+          <p>Todos os candidatos aparecem em cards com nome, cargo, e-mail, WhatsApp e data de candidatura. Use os filtros para buscar por nome, cargo ou empresa vinculada. Clique em "Ver Vídeo" para assistir a apresentação ou em "Currículo" para abrir o arquivo.</p>
+          <span class="tip">🔍 Filtre por nome, cargo ou empresa parceira</span>
+        </div>
+      </div>
+
+      <div class="step-card step-blue">
+        <div class="step-number num-blue">3</div>
+        <div class="step-body">
+          <h3>Escrever Parecer</h3>
+          <p>Cada candidato tem um campo de parecer onde o RH pode digitar sua avaliação. O parecer pode ser salvo, editado ou excluído a qualquer momento. As empresas parceiras também visualizam o parecer do RH sobre cada candidato.</p>
+          <span class="tip">📝 O parecer fica visível para as empresas autorizadas</span>
+        </div>
+      </div>
+
+      <div class="step-card step-blue">
+        <div class="step-number num-blue">4</div>
+        <div class="step-body">
+          <h3>Excluir Candidato</h3>
+          <p>Candidatos podem ser excluídos permanentemente do sistema clicando no botão "Excluir". O sistema pede confirmação antes de deletar. A exclusão remove também o vídeo, currículo e parecer vinculados.</p>
+          <span class="tip">⚠️ A exclusão é permanente e não pode ser desfeita</span>
+        </div>
+      </div>
+
+      <div class="step-card step-blue">
+        <div class="step-number num-blue">5</div>
+        <div class="step-body">
+          <h3>Cadastrar Empresas</h3>
+          <p>Na aba "Empresas", o RH cadastra as empresas parceiras com nome e PIN de acesso de 4 dígitos. O PIN é o que a empresa usará para entrar no portal. Empresas podem ser editadas ou excluídas a qualquer momento.</p>
+          <span class="tip">🏢 Cada empresa tem seu PIN exclusivo de acesso</span>
+        </div>
+      </div>
+
+      <div class="step-card step-blue">
+        <div class="step-number num-blue">6</div>
+        <div class="step-body">
+          <h3>Liberar Candidatos por Empresa</h3>
+          <p>Para cada empresa cadastrada, o RH define quais candidatos ela poderá visualizar. Clique em "Candidatos" ao lado da empresa, marque os candidatos desejados e salve. A empresa só verá os candidatos que o RH liberar.</p>
+          <span class="tip">✅ Controle total sobre o que cada empresa visualiza</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider"/>
+
+<!-- EMPRESA -->
+<section id="empresa">
+  <div class="section-inner">
+    <div class="section-header">
+      <span class="section-badge badge-green">Módulo 3</span>
+      <h2>🏢 Portal da Empresa</h2>
+      <p>Acesso simplificado para empresas parceiras visualizarem os candidatos selecionados pelo RH, com vídeo, currículo e parecer.</p>
+    </div>
+
+    <div class="steps">
+      <div class="step-card step-green">
+        <div class="step-number num-green">1</div>
+        <div class="step-body">
+          <h3>Acesso com PIN</h3>
+          <p>A empresa recebe um PIN de 4 dígitos fornecido pelo RH. No portal, digita o PIN campo a campo — o sistema avança automaticamente entre os campos. Após validação, o sistema exibe o nome da empresa no topo da tela.</p>
+          <span class="tip">🔢 O PIN é fornecido pelo RH — cada empresa tem o seu</span>
+        </div>
+      </div>
+
+      <div class="step-card step-green">
+        <div class="step-number num-green">2</div>
+        <div class="step-body">
+          <h3>Visualizar Candidatos</h3>
+          <p>A empresa visualiza apenas os candidatos que o RH liberou para ela. Cada card exibe nome, cargo, e-mail, WhatsApp e data de candidatura. É possível filtrar por nome ou cargo para facilitar a busca.</p>
+          <span class="tip">👁 A empresa só vê os candidatos autorizados pelo RH</span>
+        </div>
+      </div>
+
+      <div class="step-card step-green">
+        <div class="step-number num-green">3</div>
+        <div class="step-body">
+          <h3>Assistir ao Vídeo</h3>
+          <p>Clique em "Ver Vídeo" para abrir o vídeo de apresentação do candidato em um player integrado. O vídeo pode ser pausado, avançado e assistido quantas vezes for necessário, sem precisar baixar nada.</p>
+          <span class="tip">▶ O vídeo abre direto no portal sem download</span>
+        </div>
+      </div>
+
+      <div class="step-card step-green">
+        <div class="step-number num-green">4</div>
+        <div class="step-body">
+          <h3>Abrir Currículo</h3>
+          <p>Clique em "Currículo" para abrir o arquivo em uma nova aba do navegador. O currículo pode ser visualizado, baixado ou impresso diretamente pelo navegador.</p>
+          <span class="tip">📄 Currículo abre em nova aba para fácil leitura</span>
+        </div>
+      </div>
+
+      <div class="step-card step-green">
+        <div class="step-number num-green">5</div>
+        <div class="step-body">
+          <h3>Parecer do RH</h3>
+          <p>Quando o RH tiver registrado um parecer sobre o candidato, ele aparece automaticamente no card em destaque. A empresa pode ler a avaliação do RH mas não pode editar ou excluir — acesso somente leitura.</p>
+          <span class="tip">📝 Parecer visível mas não editável pela empresa</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div style="font-size:2rem;margin-bottom:.8rem">🎯</div>
+  <strong>gestorRH</strong> — Sistema de Gestão de Candidaturas<br>
+  <span style="margin-top:.4rem;display:block">Dúvidas? Entre em contato com o suporte.</span>
+</footer>
+
+</body>
+</html>
