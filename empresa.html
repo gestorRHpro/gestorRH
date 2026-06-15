@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Portal Empresa – RH</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f0f4f8; color: #1e293b; }
+
+/* LOGIN */
+#loginScreen {
+  min-height: 100vh; display: flex; align-items: center; justify-content: center;
+  background: #020817;
+  position: relative; overflow: hidden;
+}
+canvas#stars {
+  position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0;
+}
+.orb {
+  position: absolute; border-radius: 50%; filter: blur(80px); z-index: 1; animation: orbFloat 8s ease-in-out infinite alternate;
+}
+.orb1 { width: 500px; height: 500px; background: radial-gradient(circle, rgba(14,165,233,.35), transparent 70%); top: -100px; left: -100px; animation-delay: 0s; }
+.orb2 { width: 400px; height: 400px; background: radial-gradient(circle, rgba(99,102,241,.3), transparent 70%); bottom: -80px; right: -80px; animation-delay: -3s; }
+.orb3 { width: 300px; height: 300px; background: radial-gradient(circle, rgba(6,182,212,.2), transparent 70%); top: 50%; left: 50%; transform: translate(-50%,-50%); animation-delay: -5s; }
+@keyframes orbFloat {
+  from { transform: translate(0,0) scale(1); }
+  to   { transform: translate(30px,20px) scale(1.1); }
+}
+.login-card {
+  position: relative; z-index: 10;
+  background: rgba(255,255,255,.04);
+  backdrop-filter: blur(40px);
+  -webkit-backdrop-filter: blur(40px);
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: 28px; padding: 3.5rem 3rem;
+  box-shadow: 0 40px 100px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.15), 0 0 0 1px rgba(14,165,233,.1);
+  width: 100%; max-width: 400px; text-align: center;
+  animation: cardIn .8s cubic-bezier(.22,1,.36,1);
+}
+@keyframes cardIn {
+  from { opacity: 0; transform: translateY(40px) scale(.95); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+.login-logo {
+  width: 72px; height: 72px; border-radius: 20px; margin: 0 auto 1.5rem;
+  background: linear-gradient(135deg, #0ea5e9, #6366f1);
+  display: flex; align-items: center; justify-content: center; font-size: 2.2rem;
+  box-shadow: 0 8px 40px rgba(14,165,233,.6), 0 0 0 1px rgba(255,255,255,.1);
+  animation: logoPulse 3s ease-in-out infinite;
+}
+@keyframes logoPulse {
+  0%,100% { box-shadow: 0 8px 40px rgba(14,165,233,.6), 0 0 0 1px rgba(255,255,255,.1); }
+  50%      { box-shadow: 0 8px 60px rgba(14,165,233,.9), 0 0 0 1px rgba(255,255,255,.2); }
+}
+.login-card h1 {
+  color: white; font-size: 1.9rem; font-weight: 800; margin-bottom: .4rem;
+  letter-spacing: -1px;
+  background: linear-gradient(135deg, #fff 40%, #7dd3fc);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.login-card .subtitle { color: rgba(255,255,255,.4); font-size: .9rem; margin-bottom: 2.5rem; }
+.pin-label { color: rgba(255,255,255,.5); font-size: .8rem; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 1rem; }
+
+.pin-inputs { display: flex; gap: 10px; justify-content: center; margin: 1.5rem 0; }
+.pin-input {
+  width: 52px; height: 60px; text-align: center; font-size: 1.6rem; font-weight: 700;
+  background: rgba(255,255,255,.08); border: 1.5px solid rgba(255,255,255,.2);
+  border-radius: 12px; color: white; outline: none; transition: border .2s, background .2s;
+}
+.pin-input:focus { border-color: #0ea5e9; background: rgba(14,165,233,.15); box-shadow: 0 0 0 3px rgba(14,165,233,.2); }
+
+.btn-login {
+  width: 100%; padding: 13px;
+  background: linear-gradient(135deg, #0ea5e9, #06b6d4);
+  color: white; border: none; border-radius: 12px;
+  font-size: 15px; font-weight: 700; cursor: pointer;
+  box-shadow: 0 8px 24px rgba(14,165,233,.4);
+  transition: transform .2s, box-shadow .2s;
+}
+.btn-login:hover { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(14,165,233,.5); }
+#loginErro { color: #f87171; font-size: .85rem; margin-bottom: .8rem; display: none; }
+
+/* HEADER */
+header {
+  background: #0f2027; color: white;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 1rem 2rem; position: sticky; top: 0; z-index: 100;
+  box-shadow: 0 2px 12px rgba(0,0,0,.2);
+}
+header h1 { font-size: 1.1rem; display: flex; align-items: center; gap: 10px; }
+.empresa-badge {
+  background: rgba(14,165,233,.2); border: 1px solid rgba(14,165,233,.4);
+  color: #7dd3fc; border-radius: 999px; padding: 3px 12px; font-size: .8rem; font-weight: 600;
+}
+
+/* MAIN */
+main { max-width: 1100px; margin: 0 auto; padding: 2rem 1rem; }
+
+/* FILTROS */
+.filtros { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 1.5rem; }
+.filtros input, .filtros select {
+  padding: 9px 14px; border: 1.5px solid #e2e8f0; border-radius: 10px;
+  font-size: 14px; outline: none; background: white;
+}
+.filtros input { flex: 1; min-width: 200px; }
+.filtros input:focus, .filtros select:focus { border-color: #0ea5e9; }
+
+/* CARDS */
+.candidatos-grid { display: grid; gap: 1rem; }
+.cand-card {
+  background: white; border-radius: 14px; padding: 1.5rem;
+  box-shadow: 0 2px 12px rgba(0,0,0,.06); border: 1.5px solid #f1f5f9;
+  transition: box-shadow .2s;
+}
+.cand-card:hover { box-shadow: 0 4px 20px rgba(0,0,0,.1); }
+.cand-header { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 8px; }
+.cand-nome { font-size: 1.1rem; font-weight: 700; color: #0f2027; }
+.cand-cargo {
+  display: inline-block; background: #ecfeff; color: #0891b2;
+  border-radius: 999px; padding: 3px 12px; font-size: .8rem; font-weight: 600; margin-top: 4px;
+}
+.cand-info { color: #64748b; font-size: .88rem; margin: .8rem 0; line-height: 1.7; }
+.cand-acoes { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 1rem; }
+
+/* PARECER RH */
+.parecer-box {
+  background: #f8fafc; border-left: 3px solid #0ea5e9;
+  border-radius: 0 10px 10px 0; padding: .8rem 1rem;
+  margin-top: 1rem; font-size: .9rem; color: #334155; line-height: 1.6;
+}
+.parecer-box strong { color: #0ea5e9; display: block; margin-bottom: .3rem; font-size: .8rem; text-transform: uppercase; letter-spacing: .5px; }
+
+/* MODAL */
+.modal-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,.6); z-index: 200; align-items: center; justify-content: center;
+}
+.modal-overlay.open { display: flex; }
+.modal {
+  background: white; border-radius: 16px; padding: 2rem;
+  max-width: 680px; width: 90%; max-height: 90vh; overflow-y: auto;
+}
+.modal h3 { color: #0f2027; margin-bottom: 1rem; font-size: 1.2rem; }
+.modal-close { float: right; background: none; border: none; font-size: 1.4rem; cursor: pointer; color: #64748b; }
+#videoPlayer { width: 100%; border-radius: 10px; max-height: 60vh; }
+
+/* BOTÕES */
+.btn {
+  padding: 9px 20px; border-radius: 9px; font-size: 14px;
+  font-weight: 600; cursor: pointer; border: none; transition: background .2s;
+}
+.btn-cyan { background: #0ea5e9; color: white; }
+.btn-cyan:hover { background: #0284c7; }
+.btn-gray { background: #e2e8f0; color: #475569; }
+.btn-gray:hover { background: #cbd5e1; }
+.btn-outline { background: white; color: #0ea5e9; border: 1.5px solid #0ea5e9; }
+.btn-outline:hover { background: #ecfeff; }
+.btn-sm { padding: 6px 14px; font-size: 13px; }
+
+.empty { text-align: center; color: #94a3b8; padding: 3rem; font-size: 1rem; }
+
+@media(max-width:600px) {
+  header { padding: .8rem 1rem; }
+  main { padding: 1rem .5rem; }
+  .pin-inputs { gap: 8px; }
+  .pin-input { width: 44px; height: 54px; font-size: 1.4rem; }
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginScreen">
+  <canvas id="stars"></canvas>
+  <div class="orb orb1"></div>
+  <div class="orb orb2"></div>
+  <div class="orb orb3"></div>
+  <div class="login-card">
+    <div class="login-logo">🏢</div>
+    <h1>Portal Empresa</h1>
+    <p class="subtitle">Acesso exclusivo para empresas parceiras</p>
+    <div class="pin-label">🔐 PIN de acesso</div>
+    <div class="pin-inputs">
+      <input class="pin-input" type="password" maxlength="1" id="p1" oninput="proximoPin(this,'p2')" onkeydown="anteriorPin(event,this,'')"/>
+      <input class="pin-input" type="password" maxlength="1" id="p2" oninput="proximoPin(this,'p3')" onkeydown="anteriorPin(event,this,'p1')"/>
+      <input class="pin-input" type="password" maxlength="1" id="p3" oninput="proximoPin(this,'p4')" onkeydown="anteriorPin(event,this,'p2')"/>
+      <input class="pin-input" type="password" maxlength="1" id="p4" oninput="proximoPin(this,'')"   onkeydown="anteriorPin(event,this,'p3')"/>
+    </div>
+    <div id="loginErro">PIN inválido. Tente novamente.</div>
+    <button class="btn-login" onclick="fazerLogin()">Entrar →</button>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="appScreen" style="display:none">
+  <header>
+    <h1>🏢 Portal Empresa <span class="empresa-badge" id="empresaNomeHeader"></span></h1>
+    <button class="btn btn-gray btn-sm" onclick="logout()">Sair</button>
+  </header>
+
+  <main>
+    <div class="filtros">
+      <input type="text" id="buscaNome" placeholder="🔍 Buscar por nome..." oninput="filtrar()"/>
+      <select id="filtroCargo" onchange="filtrar()">
+        <option value="">Todos os cargos</option>
+      </select>
+    </div>
+    <div id="listaCandidatos" class="candidatos-grid"></div>
+  </main>
+</div>
+
+<!-- MODAL VÍDEO -->
+<div class="modal-overlay" id="videoModal">
+  <div class="modal" style="max-width:720px">
+    <button class="modal-close" onclick="fecharModal('videoModal')">✕</button>
+    <h3 id="videoModalNome"></h3>
+    <video id="videoPlayer" controls></video>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://qbtroafavgbvrznggppr.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFidHJvYWZhdmdidnJ6bmdncHByIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE0NDUwMTcsImV4cCI6MjA5NzAyMTAxN30.POJQXzgEzlItAyyZY0UskSuPjPdVBQUPck4iHw6h6SA';
+
+const headers = {
+  'Authorization': `Bearer ${SUPABASE_KEY}`,
+  'apikey': SUPABASE_KEY,
+  'Content-Type': 'application/json'
+};
+
+let empresaAtual = null;
+let todosCandidatos = [];
+
+// ── PIN ───────────────────────────────────────────────────────────────────
+function proximoPin(el, nextId) {
+  if (el.value && nextId) document.getElementById(nextId).focus();
+  if (!nextId && el.value) fazerLogin();
+}
+function anteriorPin(e, el, prevId) {
+  if (e.key === 'Backspace' && !el.value && prevId) document.getElementById(prevId).focus();
+}
+function getPin() {
+  return ['p1','p2','p3','p4'].map(id => document.getElementById(id).value).join('');
+}
+
+// ── LOGIN ─────────────────────────────────────────────────────────────────
+async function fazerLogin() {
+  const pin = getPin();
+  if (pin.length < 1) return;
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/empresas?pin=eq.${pin}&select=*`, { headers });
+    const data = await res.json();
+    if (!data.length) {
+      document.getElementById('loginErro').style.display = 'block';
+      ['p1','p2','p3','p4'].forEach(id => document.getElementById(id).value = '');
+      document.getElementById('p1').focus();
+      return;
+    }
+    empresaAtual = data[0];
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('appScreen').style.display = 'block';
+    document.getElementById('empresaNomeHeader').textContent = empresaAtual.nome;
+    await carregarCandidatos();
+  } catch(e) { alert('Erro: ' + e.message); }
+}
+
+function logout() {
+  empresaAtual = null;
+  todosCandidatos = [];
+  ['p1','p2','p3','p4'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('loginErro').style.display = 'none';
+  document.getElementById('appScreen').style.display = 'none';
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('p1').focus();
+}
+
+// ── CARREGAR ──────────────────────────────────────────────────────────────
+async function carregarCandidatos() {
+  const res = await fetch(
+    `${SUPABASE_URL}/rest/v1/empresa_candidatos?empresa_id=eq.${empresaAtual.id}&select=candidato_id`,
+    { headers }
+  );
+  const ecs = await res.json();
+  const ids = ecs.map(e => e.candidato_id);
+
+  if (!ids.length) {
+    document.getElementById('listaCandidatos').innerHTML = '<div class="empty">Nenhum candidato disponível ainda.</div>';
+    return;
+  }
+
+  const [cands, pareceres] = await Promise.all([
+    fetch(`${SUPABASE_URL}/rest/v1/candidatos?id=in.(${ids.join(',')})&select=*&order=criado_em.desc`, { headers }).then(r => r.json()),
+    fetch(`${SUPABASE_URL}/rest/v1/pareceres?candidato_id=in.(${ids.join(',')})&select=*`, { headers }).then(r => r.json()),
+  ]);
+
+  todosCandidatos = cands.map(c => ({
+    ...c,
+    parecer: (pareceres.find(p => p.candidato_id === c.id) || {}).parecer || '',
+  }));
+
+  popularFiltros();
+  renderCandidatos(todosCandidatos);
+}
+
+function popularFiltros() {
+  const cargos = [...new Set(todosCandidatos.map(c => c.cargo))].sort();
+  const sel = document.getElementById('filtroCargo');
+  sel.innerHTML = '<option value="">Todos os cargos</option>';
+  cargos.forEach(c => sel.innerHTML += `<option value="${c}">${c}</option>`);
+}
+
+function filtrar() {
+  const busca = document.getElementById('buscaNome').value.toLowerCase();
+  const cargo = document.getElementById('filtroCargo').value;
+  const lista = todosCandidatos.filter(c =>
+    c.nome.toLowerCase().includes(busca) && (!cargo || c.cargo === cargo)
+  );
+  renderCandidatos(lista);
+}
+
+// ── RENDER ────────────────────────────────────────────────────────────────
+function renderCandidatos(lista) {
+  const el = document.getElementById('listaCandidatos');
+  if (!lista.length) { el.innerHTML = '<div class="empty">Nenhum candidato encontrado.</div>'; return; }
+
+  el.innerHTML = lista.map(c => `
+    <div class="cand-card">
+      <div class="cand-header">
+        <div>
+          <div class="cand-nome">${c.nome}</div>
+          <span class="cand-cargo">${c.cargo}</span>
+        </div>
+      </div>
+      <div class="cand-info">
+        ✉️ ${c.email} &nbsp;|&nbsp; 📱 ${c.whatsapp}<br>
+        📅 ${new Date(c.criado_em).toLocaleDateString('pt-BR')}
+      </div>
+      <div class="cand-acoes">
+        <button class="btn btn-outline btn-sm" onclick="verVideo('${c.video_url}','${c.nome}')">▶ Ver Vídeo</button>
+        <button class="btn btn-gray btn-sm" onclick="window.open('${c.curriculo_url}','_blank')">📄 Currículo</button>
+      </div>
+      ${c.parecer ? `
+      <div class="parecer-box">
+        <strong>📝 Parecer do RH</strong>
+        ${c.parecer}
+      </div>` : ''}
+    </div>
+  `).join('');
+}
+
+// ── VÍDEO ─────────────────────────────────────────────────────────────────
+function verVideo(url, nome) {
+  document.getElementById('videoPlayer').src = url;
+  document.getElementById('videoModalNome').textContent = '🎥 ' + nome;
+  document.getElementById('videoModal').classList.add('open');
+}
+
+function fecharModal(id) {
+  document.getElementById(id).classList.remove('open');
+  if (id === 'videoModal') document.getElementById('videoPlayer').src = '';
+}
+
+document.querySelectorAll('.modal-overlay').forEach(m => {
+  m.addEventListener('click', e => { if (e.target === m) fecharModal(m.id); });
+});
+
+// Foco automático no primeiro campo do PIN
+window.onload = () => document.getElementById('p1').focus();
+</script>
+<script>
+// Estrelas animadas
+const canvas = document.getElementById('stars');
+const ctx = canvas.getContext('2d');
+let stars = [];
+function resizeCanvas() { canvas.width = innerWidth; canvas.height = innerHeight; }
+function createStars() {
+  stars = [];
+  for (let i = 0; i < 150; i++) {
+    stars.push({ x: Math.random()*canvas.width, y: Math.random()*canvas.height, r: Math.random()*1.5+.3, a: Math.random(), da: (Math.random()-.5)*.01 });
+  }
+}
+function drawStars() {
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  stars.forEach(s => {
+    s.a += s.da;
+    if (s.a <= 0 || s.a >= 1) s.da *= -1;
+    ctx.beginPath();
+    ctx.arc(s.x, s.y, s.r, 0, Math.PI*2);
+    ctx.fillStyle = `rgba(255,255,255,${s.a})`;
+    ctx.fill();
+  });
+  requestAnimationFrame(drawStars);
+}
+resizeCanvas(); createStars(); drawStars();
+window.addEventListener('resize', () => { resizeCanvas(); createStars(); });
+</script>
+</body>
+</html>
