@@ -242,7 +242,12 @@
       <div class="error" id="erroWA">WhatsApp inválido.</div>
 
       <label>Vaga / Cargo pretendido *</label>
-      <select id="cargo"></select>
+      <input type="text" id="cargoBusca" placeholder="Digite para buscar a vaga..." oninput="filtrarCargos()" onfocus="mostrarListaCargos()" autocomplete="off"/>
+      <div id="cargoListaWrap" style="position:relative">
+        <div id="cargoLista" style="display:none;position:absolute;top:4px;left:0;right:0;background:white;border:1.5px solid #e2e8f0;border-radius:10px;max-height:220px;overflow-y:auto;z-index:50;box-shadow:0 8px 24px rgba(0,0,0,.1)"></div>
+      </div>
+      <input type="hidden" id="cargo"/>
+      <div class="error" id="erroCargo">Selecione uma vaga da lista.</div>
       <button type="button" onclick="abrirModalCargo()" style="margin-top:8px;background:none;border:none;color:#2563eb;font-size:.85rem;font-weight:600;cursor:pointer;padding:0">+ Cadastrar nova vaga (RH)</button>
 
       <button class="btn btn-primary" onclick="avancar1()">Avançar →</button>
@@ -365,15 +370,54 @@ const RH_USER = 'rh@empresa.com';
 const RH_PASS = 'rh2024';
 let rhLogado = false;
 
+let listaCargosCache = [];
+
 async function carregarCargos() {
   const res = await fetch(`${SUPABASE_URL}/rest/v1/cargos?select=nome&order=nome.asc`, {
     headers: { 'Authorization': `Bearer ${SUPABASE_KEY}`, 'apikey': SUPABASE_KEY }
   });
-  const data = await res.json();
-  const sel = document.getElementById('cargo');
-  sel.innerHTML = data.map(c => `<option>${c.nome}</option>`).join('');
+  listaCargosCache = await res.json();
 }
 carregarCargos();
+
+function renderListaCargos(lista) {
+  const div = document.getElementById('cargoLista');
+  if (!lista.length) {
+    div.innerHTML = '<div style="padding:10px 14px;color:#94a3b8;font-size:.85rem">Nenhuma vaga encontrada</div>';
+  } else {
+    div.innerHTML = lista.map(c => `
+      <div onclick="selecionarCargo('${c.nome.replace(/'/g,"\\'")}')"
+           style="padding:10px 14px;cursor:pointer;font-size:.92rem;border-bottom:1px solid #f1f5f9"
+           onmouseover="this.style.background='#eff6ff'" onmouseout="this.style.background='white'">
+        ${c.nome}
+      </div>`).join('');
+  }
+  div.style.display = 'block';
+}
+
+function mostrarListaCargos() {
+  renderListaCargos(listaCargosCache);
+}
+
+function filtrarCargos() {
+  const termo = document.getElementById('cargoBusca').value.toLowerCase();
+  const filtrados = listaCargosCache.filter(c => c.nome.toLowerCase().includes(termo));
+  renderListaCargos(filtrados);
+  document.getElementById('cargo').value = '';
+}
+
+function selecionarCargo(nome) {
+  document.getElementById('cargoBusca').value = nome;
+  document.getElementById('cargo').value = nome;
+  document.getElementById('cargoLista').style.display = 'none';
+  document.getElementById('erroCargo').style.display = 'none';
+}
+
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('#cargoBusca') && !e.target.closest('#cargoLista')) {
+    document.getElementById('cargoLista').style.display = 'none';
+  }
+});
 
 function abrirModalCargo() {
   rhLogado = false;
@@ -416,6 +460,7 @@ async function salvarNovoCargo() {
     document.getElementById('cargoSalvoMsg').style.display = 'block';
     document.getElementById('novoCargoNome').value = '';
     await carregarCargos();
+    selecionarCargo(nome);
     setTimeout(fecharModalCargo, 1200);
   } catch(e) { alert('Erro ao salvar vaga: ' + e.message); }
 }
@@ -496,12 +541,14 @@ function avancar1() {
   const nome  = document.getElementById('nome').value.trim();
   const email = document.getElementById('email').value.trim();
   const wa    = document.getElementById('whatsapp').value.trim();
+  const cargo = document.getElementById('cargo').value;
 
   mostrarErro('erroNome',  !nome);
   mostrarErro('erroEmail', !validarEmail(email));
   mostrarErro('erroWA',    wa.replace(/\D/g,'').length < 6);
+  mostrarErro('erroCargo', !cargo);
 
-  if (!nome || !validarEmail(email) || wa.replace(/\D/g,'').length < 6) return;
+  if (!nome || !validarEmail(email) || wa.replace(/\D/g,'').length < 6 || !cargo) return;
   mostrarEtapa(2);
 }
 
