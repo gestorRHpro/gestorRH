@@ -45,6 +45,8 @@
     padding: 2rem;
     box-shadow: 0 4px 24px rgba(0,0,0,.08);
     margin-bottom: 1.5rem;
+    max-height: 90vh;
+    overflow-y: auto;
   }
 
   .step-label {
@@ -268,7 +270,7 @@
         <input type="text" id="novoCargoNome" placeholder="Ex.: Analista de Sucesso do Cliente"/>
         <div class="success-msg" id="cargoSalvoMsg" style="display:none">✅ Vaga cadastrada!</div>
         <label style="margin-top:1.2rem">Vagas cadastradas</label>
-        <div id="listaVagasRH" style="max-height:220px;overflow-y:auto;border:1.5px solid #e2e8f0;border-radius:10px"></div>
+        <div id="listaVagasRH" style="max-height:350px;overflow-y:auto;border:1.5px solid #e2e8f0;border-radius:10px"></div>
       </div>
       <div class="btn-row">
         <button class="btn btn-secondary" onclick="fecharModalCargo()">Cancelar</button>
