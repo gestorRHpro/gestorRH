@@ -267,6 +267,8 @@
         <label>Nova vaga</label>
         <input type="text" id="novoCargoNome" placeholder="Ex.: Analista de Sucesso do Cliente"/>
         <div class="success-msg" id="cargoSalvoMsg" style="display:none">✅ Vaga cadastrada!</div>
+        <label style="margin-top:1.2rem">Vagas cadastradas</label>
+        <div id="listaVagasRH" style="max-height:220px;overflow-y:auto;border:1.5px solid #e2e8f0;border-radius:10px"></div>
       </div>
       <div class="btn-row">
         <button class="btn btn-secondary" onclick="fecharModalCargo()">Cancelar</button>
@@ -441,9 +443,38 @@ function loginRhCargo() {
     document.getElementById('erroRhLogin').style.display = 'none';
     document.getElementById('btnRhAction').textContent = 'Salvar vaga';
     document.getElementById('btnRhAction').onclick = salvarNovoCargo;
+    renderListaVagasRH();
   } else {
     document.getElementById('erroRhLogin').style.display = 'block';
   }
+}
+
+function renderListaVagasRH() {
+  const div = document.getElementById('listaVagasRH');
+  if (!listaCargosCache.length) {
+    div.innerHTML = '<div style="padding:10px 14px;color:#94a3b8;font-size:.85rem">Nenhuma vaga cadastrada</div>';
+    return;
+  }
+  div.innerHTML = listaCargosCache.map(c => `
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 14px;border-bottom:1px solid #f1f5f9;font-size:.88rem">
+      <span>${c.nome}</span>
+      <button onclick="excluirVagaRH('${c.nome.replace(/'/g,"\\'")}')"
+        style="background:#fee2e2;color:#dc2626;border:none;border-radius:6px;padding:4px 10px;font-size:.78rem;font-weight:600;cursor:pointer">
+        🗑 Excluir
+      </button>
+    </div>`).join('');
+}
+
+async function excluirVagaRH(nome) {
+  if (!confirm(`Excluir a vaga "${nome}"?`)) return;
+  try {
+    await fetch(`${SUPABASE_URL}/rest/v1/cargos?nome=eq.${encodeURIComponent(nome)}`, {
+      method: 'DELETE',
+      headers: { 'Authorization': `Bearer ${SUPABASE_KEY}`, 'apikey': SUPABASE_KEY }
+    });
+    await carregarCargos();
+    renderListaVagasRH();
+  } catch(e) { alert('Erro ao excluir: ' + e.message); }
 }
 async function salvarNovoCargo() {
   const nome = document.getElementById('novoCargoNome').value.trim();
