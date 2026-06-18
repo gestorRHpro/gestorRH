@@ -345,7 +345,7 @@ function renderCandidatos(lista) {
       </div>
       <div class="cand-acoes">
         <button class="btn btn-outline btn-sm" onclick="verVideo('${c.video_url}','${c.nome}')">▶ Ver Vídeo</button>
-        <button class="btn btn-gray btn-sm" onclick="window.open('${c.curriculo_url}','_blank')">📄 Currículo</button>
+        <button class="btn btn-gray btn-sm" onclick='abrirCurriculos(${JSON.stringify(c.curriculo_url.split(" | "))})'>📄 Currículo${c.curriculo_url.includes(" | ") ? "s (" + c.curriculo_url.split(" | ").length + ")" : ""}</button>
         <button class="btn btn-sm" style="background:#7c3aed;color:white" onclick="exportarPDF('${c.id}')">📥 Exportar PDF</button>
       </div>
       ${c.parecer ? `
@@ -362,6 +362,30 @@ function verVideo(url, nome) {
   document.getElementById('videoPlayer').src = url;
   document.getElementById('videoModalNome').textContent = '🎥 ' + nome;
   document.getElementById('videoModal').classList.add('open');
+}
+
+function abrirCurriculos(urls) {
+  if (urls.length === 1) {
+    window.open(urls[0], '_blank');
+    return;
+  }
+  const html = `
+    <html><head><meta charset="UTF-8"><title>Currículo</title>
+    <style>
+      body { font-family: sans-serif; background: #f0f4f8; padding: 20px; margin: 0; }
+      .container { max-width: 800px; margin: 0 auto; }
+      img { width: 100%; border-radius: 10px; margin-bottom: 16px; box-shadow: 0 4px 16px rgba(0,0,0,.1); display: block; }
+      iframe { width: 100%; height: 90vh; border: none; border-radius: 10px; margin-bottom: 16px; }
+    </style></head>
+    <body>
+      <div class="container">
+        ${urls.map(u => u.match(/\.(jpg|jpeg|png)$/i) ? `<img src="${u}">` : `<iframe src="${u}"></iframe>`).join('')}
+      </div>
+    </body></html>
+  `;
+  const w = window.open('', '_blank');
+  w.document.write(html);
+  w.document.close();
 }
 
 function fecharModal(id) {
