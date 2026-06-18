@@ -323,10 +323,10 @@
       </div>
 
       <label class="upload-area" for="curriculoInput">
-        <input type="file" id="curriculoInput" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" onchange="curriculoSelecionado()"/>
+        <input type="file" id="curriculoInput" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" onchange="curriculoSelecionado()" multiple/>
         <div class="icon">📎</div>
         <p><strong>Clique para selecionar</strong> ou arraste aqui</p>
-        <p style="margin-top:.3rem">PDF, DOC, DOCX, JPG ou PNG (máx. 5MB)</p>
+        <p style="margin-top:.3rem">PDF, DOC, DOCX, ou até 5 fotos JPG/PNG (máx. 5MB no total)</p>
       </label>
       <div id="curriculoNome" class="success-msg" style="display:none"></div>
       <div class="error" id="erroCurriculo">Por favor, anexe seu currículo.</div>
@@ -537,7 +537,7 @@ async function sbInsert(table, data) {
 // ── Estado ────────────────────────────────────────────────────────────────
 let etapaAtual = 1;
 let videoBlob = null;
-let curriculoFile = null;
+let curriculoFiles = [];
 let mediaRecorder, stream, chunks = [], timerInt, elapsed = 0;
 
 // ── Progresso ─────────────────────────────────────────────────────────────
@@ -679,22 +679,34 @@ function avancar2() {
 
 // ── Currículo ─────────────────────────────────────────────────────────────
 function curriculoSelecionado() {
-  const file = document.getElementById('curriculoInput').files[0];
+  const files = [...document.getElementById('curriculoInput').files];
   const limiteMB = 5;
-  if (file.size > limiteMB * 1024 * 1024) {
-    alert(`O arquivo está muito grande (${(file.size/1024/1024).toFixed(1)}MB). O limite é ${limiteMB}MB. Tente comprimir a imagem ou o PDF.`);
+  const maxArquivos = 5;
+
+  if (!files.length) return;
+
+  if (files.length > maxArquivos) {
+    alert(`Selecione no máximo ${maxArquivos} arquivos.`);
     document.getElementById('curriculoInput').value = '';
     return;
   }
-  curriculoFile = file;
+
+  const tamanhoTotal = files.reduce((soma, f) => soma + f.size, 0);
+  if (tamanhoTotal > limiteMB * 1024 * 1024) {
+    alert(`Os arquivos somam ${(tamanhoTotal/1024/1024).toFixed(1)}MB. O limite total é ${limiteMB}MB.`);
+    document.getElementById('curriculoInput').value = '';
+    return;
+  }
+
+  curriculoFiles = files;
   const el = document.getElementById('curriculoNome');
-  el.textContent = '✅ ' + curriculoFile.name;
+  el.innerHTML = files.map(f => `✅ ${f.name} (${(f.size/1024).toFixed(0)} KB)`).join('<br>');
   el.style.display = 'block';
   document.getElementById('erroCurriculo').style.display = 'none';
 }
 
 function avancar3() {
-  if (!curriculoFile) { document.getElementById('erroCurriculo').style.display = 'block'; return; }
+  if (!curriculoFiles.length) { document.getElementById('erroCurriculo').style.display = 'block'; return; }
   // Monta resumo
   const nome  = document.getElementById('nome').value.trim();
   const email = document.getElementById('email').value.trim();
@@ -708,7 +720,7 @@ function avancar3() {
     <div class="review-item"><span>📱 WhatsApp</span>${wa}</div>
     <div class="review-item"><span>🎯 Cargo</span>${cargo}</div>
     <div class="review-item"><span>🎥 Vídeo</span>${(videoBlob.size/1e6).toFixed(1)} MB gravado</div>
-    <div class="review-item"><span>📄 Currículo</span>${curriculoFile.name}</div>
+    <div class="review-item"><span>📄 Currículo</span>${curriculoFiles.length} arquivo(s)</div>
   `;
   mostrarEtapa(4);
 }
@@ -727,14 +739,19 @@ async function enviarCandidatura() {
     const wa    = ddi + ' ' + document.getElementById('whatsapp').value.trim();
     const cargo = document.getElementById('cargo').value;
 
-    const ext = curriculoFile.name.split('.').pop();
-
     const videoUrl = await sbUpload('candidaturas', `${id}/video.webm`, videoBlob, 'video/webm');
-    const currUrl  = await sbUpload('candidaturas', `${id}/curriculo.${ext}`, curriculoFile, curriculoFile.type);
+
+    const curriculoUrls = [];
+    for (let i = 0; i < curriculoFiles.length; i++) {
+      const f = curriculoFiles[i];
+      const ext = f.name.split('.').pop();
+      const url = await sbUpload('candidaturas', `${id}/curriculo_${i+1}.${ext}`, f, f.type);
+      curriculoUrls.push(url);
+    }
 
     await sbInsert('candidatos', {
       id, nome, email, whatsapp: wa, cargo,
-      video_url: videoUrl, curriculo_url: currUrl
+      video_url: videoUrl, curriculo_url: curriculoUrls.join(' | ')
     });
 
     // Sucesso
@@ -753,7 +770,7 @@ async function enviarCandidatura() {
 }
 
 function novaCandidatura() {
-  videoBlob = null; curriculoFile = null;
+  videoBlob = null; curriculoFiles = [];
   document.getElementById('nome').value = '';
   document.getElementById('email').value = '';
   document.getElementById('whatsapp').value = '';
