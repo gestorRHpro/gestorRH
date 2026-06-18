@@ -326,7 +326,7 @@
         <input type="file" id="curriculoInput" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" onchange="curriculoSelecionado()"/>
         <div class="icon">📎</div>
         <p><strong>Clique para selecionar</strong> ou arraste aqui</p>
-        <p style="margin-top:.3rem">PDF, DOC, DOCX, JPG ou PNG (máx. 15MB)</p>
+        <p style="margin-top:.3rem">PDF, DOC, DOCX, JPG ou PNG (máx. 5MB)</p>
       </label>
       <div id="curriculoNome" class="success-msg" style="display:none"></div>
       <div class="error" id="erroCurriculo">Por favor, anexe seu currículo.</div>
@@ -679,7 +679,14 @@ function avancar2() {
 
 // ── Currículo ─────────────────────────────────────────────────────────────
 function curriculoSelecionado() {
-  curriculoFile = document.getElementById('curriculoInput').files[0];
+  const file = document.getElementById('curriculoInput').files[0];
+  const limiteMB = 5;
+  if (file.size > limiteMB * 1024 * 1024) {
+    alert(`O arquivo está muito grande (${(file.size/1024/1024).toFixed(1)}MB). O limite é ${limiteMB}MB. Tente comprimir a imagem ou o PDF.`);
+    document.getElementById('curriculoInput').value = '';
+    return;
+  }
+  curriculoFile = file;
   const el = document.getElementById('curriculoNome');
   el.textContent = '✅ ' + curriculoFile.name;
   el.style.display = 'block';
