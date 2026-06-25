@@ -704,6 +704,11 @@ def parser_fluxo(df, capturar_originais=False):
         "total entradas":"Disponibilidades entradas",
         "total saídas":"Disponibilidades Saida","total saidas":"Disponibilidades Saida",
     }
+    # Palavras que indicam claramente ENTRADA ou SAÍDA, usadas só pra decidir o destino
+    # de colunas não reconhecidas pelo mapa principal (evita perder dinheiro de vista)
+    pistas_entrada=["receita","entrada","recebiment","venda","faturamento"]
+    pistas_saida=["despesa","saida","saída","pagamento","custo","gasto"]
+
     col_ano=next((c for c in df.columns if str(c).lower() in ["ano","year"]),None)
     col_mes=next((c for c in df.columns if str(c).lower() in ["mês","mes","month"]),None)
     if not col_ano or not col_mes:
@@ -712,6 +717,7 @@ def parser_fluxo(df, capturar_originais=False):
 
     acumulado={}
     originais={}
+    nao_reconhecidas=[]  # guarda {coluna, ano, mes, valor, destino} pra aviso na tela
     for _,row in df.iterrows():
         ano=str(row.get(col_ano,"")).strip()
         mes_raw=str(row.get(col_mes,"")).lower().strip()[:3]
@@ -724,6 +730,7 @@ def parser_fluxo(df, capturar_originais=False):
                 v=float(str(row.get(col,0)).replace(",","."))
             except:
                 continue
+            if v==0: continue
             # Verifica se é um TOTAL do arquivo (usa direto, não soma) — só para auditoria/referência
             campo_total=None
             for k,dest in totais_mapa.items():
@@ -737,8 +744,14 @@ def parser_fluxo(df, capturar_originais=False):
             campo_dest=None
             for k,dest in mapa.items():
                 if k in col_l: campo_dest=dest; break
-            if not campo_dest: continue
-            if v==0: continue
+            if not campo_dest:
+                # Coluna não reconhecida — NUNCA descarta o dinheiro.
+                # Decide se é Entrada ou Saída por pista textual; se não achar pista, assume Entrada
+                # quando valor positivo (mais comum) e avisa para revisão.
+                eh_saida=any(p in col_l for p in pistas_saida)
+                campo_dest="Centro de Custos Saidas 4" if eh_saida else "Centro de Custos Entradas 4"
+                nao_reconhecidas.append({"coluna":str(col),"ano":ano,"mes":mes,
+                                         "valor":v,"destino":"Saída" if eh_saida else "Entrada"})
             chave=(ano,mes,campo_dest)
             acumulado[chave]=acumulado.get(chave,0)+v
 
@@ -775,6 +788,8 @@ def parser_fluxo(df, capturar_originais=False):
     celulas+=[{"ano":a,"mes":m,"campo":c,"valor":v} for (a,m,c),v in totais_calculados.items()]
     if detalhamento:
         celulas.append({"_detalhamento":detalhamento})
+    if nao_reconhecidas:
+        celulas.append({"_nao_reconhecidas":nao_reconhecidas})
     if capturar_originais:
         return celulas, originais
     return celulas
@@ -1972,6 +1987,15 @@ elif pg=="importar":
                         for sep in [";",","]:
                             try:
                                 df_tmp=pd.read_csv(io.BytesIO(b),sep=sep,decimal=",",encoding=enc,on_bad_lines="skip")
+                                # Corrige mojibake (UTF-8 lido como Latin-1/CP1252) nos nomes das colunas
+                                if enc in ("latin1","cp1252"):
+                                    novas_cols=[]
+                                    for c in df_tmp.columns:
+                                        try:
+                                            c_fix=str(c).encode("latin1").decode("utf-8")
+                                            novas_cols.append(c_fix)
+                                        except: novas_cols.append(c)
+                                    df_tmp.columns=novas_cols
                                 if df_tmp.shape[1]>=5 and any(c.lower() in ["mês","mes"] for c in df_tmp.columns):
                                     dfs_dir.append(df_tmp); break
                             except: pass
@@ -2003,9 +2027,80 @@ elif pg=="importar":
                     errors="coerce")
                 df_final=df_final.sort_values("_data").drop(columns=["_data"]).reset_index(drop=True)
             except: pass
+            # Identifica colunas extras que não fazem parte do padrão do sistema (TODOS + Ano/mês/Data)
+            # e soma automaticamente em Disponibilidades entradas/Saida, sem perder o dinheiro de vista
+            campos_calculados_sistema={
+                "deduções","receita líquida","lucro bruto","margem contrib","desp op",
+                "lucro operacional","resultado IR","lucro líquido","EBITDA",
+                "margem bruta %","margem contrib %","margem op %","margem líquida %","EBITDA %",
+                "ativo circ","ativo total","pass circ","pass total","PL",
+                "liquidez corrente","liquidez imediata","ROE","kanitz","PMR","PMP","PME",
+                "ciclo de caixa","giro estoque","ticket médio","ICD",
+                "saldo período","saldo acumulado","score_risco",
+                # Variações de nome vindas do arquivo do cliente (sinônimos comuns)
+                "deduções da receita bruta","receita líquida de vendas","despesas operacionais totais",
+                "resultado antes da provisão para imposto de renda e contribuição social",
+                "ativo total saldo","passivo total saldo","ativo circulante saldo","passivo circulante saldo",
+                "patrimônio líquido","Lucratividade","Margem de Contribuição",
+                "Prazo médio de pagamentos","Prazo médio de recebimentos","Prazo médio de estocagem",
+                "giro do estoque","termômetro de kanitz","roe","ticket medio",
+            }
+            campos_padrao_conhecidos=set(TODOS)|campos_calculados_sistema|{"Ano","mês","Data","Item"}
+            # Palavras que indicam que a coluna é um INDICADOR/MÉTRICA, não dinheiro real —
+            # essas colunas NÃO devem ser somadas ao Fluxo de Caixa
+            pistas_indicador=["inadimp","obsol","índice","indice","%","percentual","taxa de",
+                              "ratio","score","nota","grau"]
+            campos_extras=[c for c in df_final.columns if c not in campos_padrao_conhecidos
+                          and pd.api.types.is_numeric_dtype(df_final[c])
+                          and not any(p in c.lower() for p in pistas_indicador)]
+            campos_ignorados=[c for c in df_final.columns if c not in campos_padrao_conhecidos
+                             and pd.api.types.is_numeric_dtype(df_final[c])
+                             and any(p in c.lower() for p in pistas_indicador)]
+
+            pistas_entrada_dir=["receita","entrada","recebiment","venda","faturamento","comiss","repasse"]
+            pistas_saida_dir=["despesa","saida","saída","pagamento","custo","gasto","manutenç","marketing","honorári","taxa"]
+
+            detalhamento_dir=[]
+            if campos_extras and "mês" in df_final.columns and "Ano" in df_final.columns:
+                if "Disponibilidades entradas" not in df_final.columns:
+                    df_final["Disponibilidades entradas"]=0.
+                if "Disponibilidades Saida" not in df_final.columns:
+                    df_final["Disponibilidades Saida"]=0.
+                for campo_extra in campos_extras:
+                    col_l=campo_extra.lower()
+                    eh_saida=any(p in col_l for p in pistas_saida_dir)
+                    campo_destino="Disponibilidades Saida" if eh_saida else "Disponibilidades entradas"
+                    for idx,row in df_final.iterrows():
+                        v=float(row.get(campo_extra,0) or 0)
+                        if v==0: continue
+                        df_final.at[idx,campo_destino]=float(df_final.at[idx,campo_destino] or 0)+v
+                        detalhamento_dir.append({"ano":str(row.get("Ano","")),
+                                                 "mes":str(row.get("mês","")).lower()[:3],
+                                                 "campo_pai":campo_destino,
+                                                 "subconta":campo_extra,"valor":v})
+
+            if detalhamento_dir and st.session_state.cid:
+                df_detalhe_dir=pd.DataFrame(detalhamento_dir)
+                path_detalhe_dir=os.path.join(PASTA,f"{gid(st.session_state.cid)}_detalhamento.csv")
+                if os.path.exists(path_detalhe_dir):
+                    df_detalhe_antigo_dir=pd.read_csv(path_detalhe_dir,sep=";",decimal=",",encoding="utf-8-sig")
+                    df_detalhe_antigo_dir["ano"]=df_detalhe_antigo_dir["ano"].astype(str)
+                    df_detalhe_dir["ano"]=df_detalhe_dir["ano"].astype(str)
+                    df_detalhe_dir=pd.concat([df_detalhe_antigo_dir,df_detalhe_dir],ignore_index=True).drop_duplicates(
+                        subset=["ano","mes","campo_pai","subconta"],keep="last")
+                df_detalhe_dir.to_csv(path_detalhe_dir,sep=";",decimal=",",index=False,encoding="utf-8-sig")
+
             st.session_state.df_raw=df_final
             save_df(st.session_state.cid,df_final)
             st.markdown(f'<div class="al-s">✅ Leitura direta: <b>{len(df_final)}</b> períodos × <b>{df_final.shape[1]}</b> campos</div>',unsafe_allow_html=True)
+            if campos_extras:
+                with st.expander(f"⚠️ {len(campos_extras)} coluna(s) extra(s) somadas em Entradas/Saídas (revisão recomendada)"):
+                    st.markdown('<div class="al-w">Estas colunas não fazem parte do padrão do sistema, mas o valor foi preservado e somado ao total de Entradas ou Saídas do Fluxo de Caixa. Veja o detalhamento no drill-down da tela de Fluxo de Caixa.</div>',unsafe_allow_html=True)
+                    st.write(campos_extras)
+            if campos_ignorados:
+                with st.expander(f"ℹ️ {len(campos_ignorados)} coluna(s) identificadas como indicador/métrica — não somadas ao Fluxo de Caixa"):
+                    st.markdown('<div class="al-i">Estas colunas parecem ser indicadores (ex: % de inadimplência, obsolescência) e não valores monetários — por isso não foram somadas ao total de Entradas/Saídas. Os valores continuam disponíveis no banco de dados, caso queira usá-los em análises futuras.</div>',unsafe_allow_html=True)
+                    st.write(campos_ignorados)
             addlog(f"Leitura direta: {len(df_final)} períodos")
         else:
             st.error("Não foi possível ler o arquivo. Tente o botão 🤖 Processar com IA.")
@@ -2054,18 +2149,29 @@ elif pg=="importar":
                 if not cels:
                     st.markdown(f'<div class="al-w">⚠️ {a.name}: nenhum dado extraído.</div>',unsafe_allow_html=True)
                     continue
-                # Separa o detalhamento (drill-down) das células normais
+                # Separa o detalhamento (drill-down) e as colunas não reconhecidas das células normais
                 detalhamento_arq=[]
+                nao_reconhecidas_arq=[]
                 cels_limpas=[]
-                n_blocos_detalhamento=0
                 for c in cels:
                     if "_detalhamento" in c:
-                        n_blocos_detalhamento+=1
                         detalhamento_arq.extend(c["_detalhamento"])
+                    elif "_nao_reconhecidas" in c:
+                        nao_reconhecidas_arq.extend(c["_nao_reconhecidas"])
                     else:
                         cels_limpas.append(c)
                 cels=cels_limpas
-                st.markdown(f'<div class="al-d">🔧 DEBUG VISÍVEL: {n_blocos_detalhamento} bloco(s) de detalhamento, {len(detalhamento_arq)} linhas totais, arquivo={a.name}</div>',unsafe_allow_html=True)
+
+                if nao_reconhecidas_arq:
+                    colunas_unicas=sorted(set(item["coluna"] for item in nao_reconhecidas_arq))
+                    total_valor_nr=sum(item["valor"] for item in nao_reconhecidas_arq)
+                    with st.expander(f"⚠️ {len(colunas_unicas)} coluna(s) não reconhecida(s) automaticamente — classificadas como 'Outras' (revisão recomendada)"):
+                        st.markdown(f'<div class="al-w">O dinheiro foi mantido no total (R$ {total_valor_nr:,.2f} somados em "Outras"), mas o sistema não conseguiu identificar uma categoria específica para estas colunas. Para classificar corretamente, renomeie a coluna no arquivo original usando um termo mais comum (ex: "Receita de Serviços", "Fornecedores") e reimporte.</div>',unsafe_allow_html=True)
+                        df_nr=pd.DataFrame(nao_reconhecidas_arq)
+                        df_nr_resumo=df_nr.groupby(["coluna","destino"])["valor"].agg(["sum","count"]).reset_index()
+                        df_nr_resumo.columns=["Coluna do Arquivo","Classificada como","Total (R$)","Nº de períodos"]
+                        df_nr_resumo["Total (R$)"]=df_nr_resumo["Total (R$)"].apply(lambda v: fmt(v))
+                        st.dataframe(df_nr_resumo,use_container_width=True,hide_index=True)
                 if detalhamento_arq and st.session_state.cid:
                     df_detalhe=pd.DataFrame(detalhamento_arq)
                     path_detalhe=os.path.join(PASTA,f"{gid(st.session_state.cid)}_detalhamento.csv")
