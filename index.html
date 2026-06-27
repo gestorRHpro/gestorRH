@@ -304,20 +304,43 @@
 
       <div class="info-box">
         📌 <strong>Dicas:</strong> Fale sobre você, sua experiência e qualificações.<br>
-        Duração máxima: <strong>2 minutos</strong>. Regrave quantas vezes quiser!
+        Duração máxima: <strong>2 minutos</strong>.
       </div>
 
-      <video id="videoPreview" autoplay muted playsinline></video>
-
-      <div class="video-btns">
-        <button class="btn btn-primary" id="btnIniciar" onclick="iniciarGravacao()" style="flex:1;margin-top:0">▶ Iniciar Gravação</button>
-        <button class="btn" id="btnParar" onclick="pararGravacao()" disabled style="background:#dc2626;color:white">⏹ Parar</button>
-        <button class="btn btn-secondary" id="btnRegravar" onclick="regravar()" disabled>🔄 Regravar</button>
+      <div style="display:flex;gap:8px;margin-bottom:1rem">
+        <button type="button" id="tabGravar" onclick="trocarTabVideo('gravar')" style="flex:1;padding:10px;border:1.5px solid #2563eb;border-radius:10px;background:#2563eb;color:white;font-weight:600;font-size:14px;cursor:pointer">🎬 Gravar agora</button>
+        <button type="button" id="tabUpload" onclick="trocarTabVideo('upload')" style="flex:1;padding:10px;border:1.5px solid #e2e8f0;border-radius:10px;background:white;color:#475569;font-weight:600;font-size:14px;cursor:pointer">📤 Enviar vídeo pronto</button>
       </div>
 
-      <div id="timer"></div>
-      <div id="resultArea"></div>
-      <div class="error" id="erroVideo">Por favor, grave um vídeo antes de avançar.</div>
+      <!-- GRAVAR AO VIVO -->
+      <div id="areaGravar">
+        <video id="videoPreview" autoplay muted playsinline></video>
+
+        <div class="video-btns">
+          <button class="btn btn-primary" id="btnIniciar" onclick="iniciarGravacao()" style="flex:1;margin-top:0">▶ Iniciar Gravação</button>
+          <button class="btn" id="btnParar" onclick="pararGravacao()" disabled style="background:#dc2626;color:white">⏹ Parar</button>
+          <button class="btn btn-secondary" id="btnRegravar" onclick="regravar()" disabled>🔄 Regravar</button>
+        </div>
+
+        <div id="timer"></div>
+        <div id="resultArea"></div>
+      </div>
+
+      <!-- UPLOAD DE VÍDEO PRONTO -->
+      <div id="areaUpload" style="display:none">
+        <div class="info-box">
+          Envie um vídeo já gravado (ex.: pelo WhatsApp). Tamanho máximo: <strong>50MB</strong>.
+        </div>
+        <label class="upload-area" for="videoInput">
+          <input type="file" id="videoInput" accept="video/*" onchange="videoSelecionado()"/>
+          <div class="icon">🎥</div>
+          <p><strong>Clique para selecionar</strong> o vídeo</p>
+          <p style="margin-top:.3rem">MP4, MOV, WEBM (máx. 50MB)</p>
+        </label>
+        <div id="videoNomeArquivo" class="success-msg" style="display:none"></div>
+      </div>
+
+      <div class="error" id="erroVideo">Por favor, grave ou envie um vídeo antes de avançar.</div>
 
       <div class="btn-row">
         <button class="btn btn-secondary" onclick="voltar(1)">← Voltar</button>
@@ -551,6 +574,8 @@ async function sbInsert(table, data) {
 // ── Estado ────────────────────────────────────────────────────────────────
 let etapaAtual = 1;
 let videoBlob = null;
+let videoExt = 'webm';
+let modoVideo = 'gravar';
 let curriculoFiles = [];
 let mediaRecorder, stream, chunks = [], timerInt, elapsed = 0;
 
@@ -639,6 +664,7 @@ async function iniciarGravacao() {
   mediaRecorder.ondataavailable = e => { if (e.data.size) chunks.push(e.data); };
   mediaRecorder.onstop = () => {
     videoBlob = new Blob(chunks, {type:'video/webm'});
+    videoExt = 'webm';
     const url = URL.createObjectURL(videoBlob);
     const area = document.getElementById('resultArea');
     area.innerHTML = '';
@@ -684,6 +710,40 @@ function regravar() {
   document.getElementById('btnRegravar').disabled = true;
   document.getElementById('videoPreview').style.display = 'block';
   iniciarGravacao();
+}
+
+function trocarTabVideo(modo) {
+  modoVideo = modo;
+  const btnGravar = document.getElementById('tabGravar');
+  const btnUpload = document.getElementById('tabUpload');
+  document.getElementById('areaGravar').style.display = modo === 'gravar' ? 'block' : 'none';
+  document.getElementById('areaUpload').style.display = modo === 'upload' ? 'block' : 'none';
+
+  if (modo === 'gravar') {
+    btnGravar.style.background = '#2563eb'; btnGravar.style.color = 'white'; btnGravar.style.borderColor = '#2563eb';
+    btnUpload.style.background = 'white'; btnUpload.style.color = '#475569'; btnUpload.style.borderColor = '#e2e8f0';
+  } else {
+    btnUpload.style.background = '#2563eb'; btnUpload.style.color = 'white'; btnUpload.style.borderColor = '#2563eb';
+    btnGravar.style.background = 'white'; btnGravar.style.color = '#475569'; btnGravar.style.borderColor = '#e2e8f0';
+  }
+  document.getElementById('erroVideo').style.display = 'none';
+}
+
+function videoSelecionado() {
+  const file = document.getElementById('videoInput').files[0];
+  if (!file) return;
+  const limiteMB = 50;
+  if (file.size > limiteMB * 1024 * 1024) {
+    alert(`O vídeo está muito grande (${(file.size/1024/1024).toFixed(1)}MB). O limite é ${limiteMB}MB.`);
+    document.getElementById('videoInput').value = '';
+    return;
+  }
+  videoBlob = file;
+  videoExt = file.name.split('.').pop();
+  const el = document.getElementById('videoNomeArquivo');
+  el.textContent = '✅ ' + file.name + ' (' + (file.size/1024/1024).toFixed(1) + ' MB)';
+  el.style.display = 'block';
+  document.getElementById('erroVideo').style.display = 'none';
 }
 
 function avancar2() {
@@ -770,7 +830,7 @@ async function enviarCandidatura() {
     const wa    = ddi + ' ' + document.getElementById('whatsapp').value.trim();
     const cargo = document.getElementById('cargo').value;
 
-    const videoUrl = await sbUpload('candidaturas', `${id}/video.webm`, videoBlob, 'video/webm');
+    const videoUrl = await sbUpload('candidaturas', `${id}/video.${videoExt}`, videoBlob, videoBlob.type || 'video/' + videoExt);
 
     const curriculoUrls = [];
     for (let i = 0; i < curriculoFiles.length; i++) {
@@ -801,18 +861,21 @@ async function enviarCandidatura() {
 }
 
 function novaCandidatura() {
-  videoBlob = null; curriculoFiles = [];
+  videoBlob = null; curriculoFiles = []; videoExt = 'webm';
   document.getElementById('nome').value = '';
   document.getElementById('email').value = '';
   document.getElementById('whatsapp').value = '';
   document.getElementById('resultArea').innerHTML = '';
   document.getElementById('curriculoNome').style.display = 'none';
+  document.getElementById('videoNomeArquivo').style.display = 'none';
+  document.getElementById('videoInput').value = '';
   document.getElementById('videoPreview').style.display = 'block';
   document.getElementById('btnIniciar').disabled  = false;
   document.getElementById('btnParar').disabled    = true;
   document.getElementById('btnRegravar').disabled = true;
   document.getElementById('btnEnviar').innerHTML  = '🚀 Enviar candidatura';
   document.getElementById('btnEnviar').disabled   = false;
+  trocarTabVideo('gravar');
   mostrarEtapa(1);
 }
 </script>
